@@ -1,0 +1,21 @@
+{% extends 'layout.html' %}
+{% block content %}
+<h2>✏️ Editar Servicio</h2>
+
+<form method="POST">
+    <div class="mb-3">
+        <label>Nombre</label>
+        <input type="text" name="nombre" class="form-control" value="{{ servicio.nombre }}" required>
+    </div>
+    <div class="mb-3">
+        <label>Duración (minutos)</label>
+        <input type="number" name="duracion" class="form-control" value="{{ servicio.duracion_minutos }}" required>
+    </div>
+    <div class="mb-3">
+        <label>Precio (¢)</label>
+        <input type="number" name="precio" step="0.01" class="form-control" value="{{ servicio.precio }}" required>
+    </div>
+    <button class="btn btn-primary">Guardar cambios</button>
+    <a href="{{ url_for('servicios') }}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

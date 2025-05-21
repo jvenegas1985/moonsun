@@ -1,0 +1,71 @@
+{% extends 'layout.html' %}
+
+{% block head %}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+<style>
+  #calendar {
+    max-width: 900px;
+    margin: 0 auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<h2 class="text-center mb-4">📅 Calendario de Citas</h2>
+<div id="calendar"></div>
+
+<!-- 🔽 Modal Bootstrap para detalles de la cita -->
+<div class="modal fade" id="citaModal" tabindex="-1" aria-labelledby="citaModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="citaModalLabel">Detalles de la Cita</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Cliente:</strong> <span id="clienteNombre"></span></p>
+        <p><strong>Servicio:</strong> <span id="servicioNombre"></span></p>
+        <p><strong>Empleado:</strong> <span id="empleadoNombre"></span></p>
+        <p><strong>Inicio:</strong> <span id="inicioCita"></span></p>
+        <p><strong>Fin:</strong> <span id="finCita"></span></p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const calendarEl = document.getElementById('calendar');
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: 'dayGridMonth',
+      locale: 'es',
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,timeGridWeek,timeGridDay'
+      },
+      events: '/api/citas-json',
+      eventClick: function (info) {
+        // Llenar el modal con información
+        const [cliente, servicio] = info.event.title.split(' - ');
+        document.getElementById('clienteNombre').textContent = cliente;
+        document.getElementById('servicioNombre').textContent = servicio;
+        document.getElementById('empleadoNombre').textContent = info.event.extendedProps.description.replace('Empleado: ', '');
+        document.getElementById('inicioCita').textContent = new Date(info.event.start).toLocaleString('es-ES');
+        document.getElementById('finCita').textContent = new Date(info.event.end).toLocaleString('es-ES');
+
+        // Mostrar el modal
+        const modal = new bootstrap.Modal(document.getElementById('citaModal'));
+        modal.show();
+      }
+    });
+    calendar.render();
+  });
+</script>
+{% endblock %}

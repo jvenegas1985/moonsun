@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Salón de Belleza</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+    <style>
+        body {
+            background: #f0f2f5;
+        }
+        .hero {
+            background: linear-gradient(to right, #343a40, #6c757d);
+            color: white;
+            padding: 80px 20px;
+            border-radius: 0 0 30px 30px;
+        }
+        .section-title {
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            transition: 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+    <div class="container">
+        <a class="navbar-brand" href="#"><i class="bi bi-scissors"></i> Salón de Belleza</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-end" id="navbarContent">
+            <ul class="navbar-nav">
+                <li class="nav-item"><a class="nav-link" href="#servicios">Servicios</a></li>
+                <li class="nav-item"><a class="nav-link" href="#productos">Productos</a></li>
+                <li class="nav-item"><a class="nav-link btn btn-outline-light ms-lg-3" href="{{ url_for('login') }}"><i class="bi bi-box-arrow-in-right"></i> Iniciar sesión</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero text-center">
+    <div class="container">
+        <h1 class="display-4 mb-3">Bienvenidos al Salón de Belleza</h1>
+        <p class="lead">Transformamos tu estilo con servicios y productos de alta calidad.</p>
+    </div>
+</section>
+
+<!-- SERVICIOS -->
+<section id="servicios" class="py-5">
+    <div class="container">
+        <h2 class="text-center section-title"><i class="bi bi-stars"></i> Nuestros Servicios</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-person-fill-gear display-5 text-secondary mb-3"></i>
+                        <h5 class="card-title">Corte de Cabello</h5>
+                        <p class="card-text">Estilos modernos para todas las edades.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-brush display-5 text-secondary mb-3"></i>
+                        <h5 class="card-title">Maquillaje Profesional</h5>
+                        <p class="card-text">Para eventos especiales y sesiones fotográficas.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-droplet-half display-5 text-secondary mb-3"></i>
+                        <h5 class="card-title">Tratamientos Capilares</h5>
+                        <p class="card-text">Repara y fortalece tu cabello con nuestros tratamientos.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- PRODUCTOS -->
+<section id="productos" class="py-5 bg-white">
+    <div class="container">
+        <h2 class="text-center section-title"><i class="bi bi-bag-heart"></i> Productos Destacados</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-box2-heart display-5 text-secondary mb-3"></i>
+                        <h5 class="card-title">Shampoo Orgánico</h5>
+                        <p class="card-text">Limpieza natural para un cabello saludable. ¢7.500</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-flower1 display-5 text-secondary mb-3"></i>
+                        <h5 class="card-title">Mascarilla Hidratante</h5>
+                        <p class="card-text">Restaura la suavidad del cabello seco. ¢5.900</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-sun-fill display-5 text-secondary mb-3"></i>
+                        <h5 class="card-title">Protector Térmico</h5>
+                        <p class="card-text">Protege contra el calor de planchas y secadoras. ¢6.200</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="text-center py-4 text-muted mt-5 border-top">
+    <small>&copy; 2025 Salón de Belleza. Todos los derechos reservados.</small>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
