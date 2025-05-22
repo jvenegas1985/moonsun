@@ -1,0 +1,59 @@
+{% extends 'admin/layout.html' %}
+
+{% block content %}
+<h2 class="mb-4 text-center">Gestión de Empleados</h2>
+
+<form method="POST" class="mb-5">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-4">
+      <label class="form-label">Nombre</label>
+      <input type="text" name="nombre" class="form-control" placeholder="Nombre" required>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Especialidad</label>
+      <input type="text" name="especialidad" class="form-control" placeholder="Especialidad">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Teléfono</label>
+      <input type="text" name="telefono" class="form-control" placeholder="Teléfono">
+    </div>
+    <div class="col-md-1 d-grid">
+      <button class="btn btn-outline-success" title="Agregar">
+        <i class="bi bi-person-plus"></i>
+      </button>
+    </div>
+  </div>
+</form>
+
+<div class="table-responsive shadow-sm rounded bg-white">
+  <table class="table table-hover align-middle">
+    <thead class="table-secondary">
+      <tr>
+        <th>👤 Nombre</th>
+        <th>🎓 Especialidad</th>
+        <th>📞 Teléfono</th>
+        <th class="text-center">⚙️ Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for emp in empleados %}
+      <tr>
+        <td>{{ emp.nombre }}</td>
+        <td>{{ emp.especialidad }}</td>
+        <td>{{ emp.telefono }}</td>
+        <td class="text-center">
+          <a href="{{ url_for('editar_empleado', id=emp.id) }}" class="btn btn-sm btn-outline-warning me-1" title="Editar">
+            <i class="bi bi-pencil-square"></i>
+          </a>
+          <form method="POST" action="{{ url_for('eliminar_empleado', id=emp.id) }}" class="d-inline">
+            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Eliminar empleado?')" title="Eliminar">
+              <i class="bi bi-trash"></i>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

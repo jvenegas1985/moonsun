@@ -1,0 +1,75 @@
+{% extends 'public/layout_public.html' %}
+{% block content %}
+<section id="productos" class="py-5 bg-white">
+  <div class="container">
+    <h2 class="text-center mb-4 section-title">
+      <i class="bi bi-bag-heart"></i> Productos Destacados
+    </h2>
+    <div class="row g-4">
+      {% for prod in productos %}
+      <div class="col-6 col-md-4 col-lg-3 col-xl-2">
+        <div class="card h-100 shadow-sm product-card">
+          {% if prod.imagen_url %}
+          <img src="{{ url_for('static', filename=prod.imagen_url) }}" class="card-img-top" alt="{{ prod.nombre }}">
+          {% else %}
+          <img src="{{ url_for('static', filename='no-image.png') }}" class="card-img-top" alt="Sin imagen">
+          {% endif %}
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title">{{ prod.nombre }}</h5>
+            <p class="card-text text-truncate">{{ prod.descripcion }}</p>
+            <p class="fw-bold text-primary mt-auto">₡{{ "%.2f"|format(prod.precio) }}</p>
+
+            <button class="btn btn-outline-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#modalDesc{{ prod.id }}">
+              <i class="bi bi-eye"></i> Ver descripción
+            </button>
+
+            <a href="https://wa.me/50686754526?text=Hola,%20me%20interesa%20el%20producto%20{{ prod.nombre_url }}" target="_blank" class="btn btn-success btn-sm mt-2 d-flex align-items-center justify-content-center gap-2">
+              <i class="bi bi-whatsapp"></i> Solicitar información
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Descripción -->
+      <div class="modal fade" id="modalDesc{{ prod.id }}" tabindex="-1" aria-labelledby="modalLabel{{ prod.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="modalLabel{{ prod.id }}">{{ prod.nombre }}</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+              {% if prod.imagen_url %}
+              <img src="{{ url_for('static', filename=prod.imagen_url) }}" class="img-fluid mb-3 rounded" alt="{{ prod.nombre }}">
+              {% endif %}
+              <p><strong>Descripción:</strong> {{ prod.descripcion or 'Sin descripción.' }}</p>
+              <p><strong>Precio:</strong> ₡{{ "%.2f"|format(prod.precio) }}</p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<style>
+  .product-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+  }
+  .card-text.text-truncate {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;  
+    overflow: hidden;
+  }
+</style>
+{% endblock %}

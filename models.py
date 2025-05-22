@@ -1,6 +1,6 @@
+
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-
 db = SQLAlchemy()
 
 class Cliente(db.Model):
@@ -28,19 +28,31 @@ class Empleado(db.Model):
     def __repr__(self):
         return f'<Empleado {self.nombre}>'
 
-
-
 class Servicio(db.Model):
     __tablename__ = 'servicios'
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
+    descripcion = db.Column(db.Text, nullable=True)  # Nuevo
     duracion_minutos = db.Column(db.Integer, nullable=False)
     precio = db.Column(db.Float, nullable=False)
+    imagen_url = db.Column(db.String(255), nullable=True)  # Opcional
 
     citas = db.relationship('Cita', backref='servicio', lazy=True)
 
     def __repr__(self):
         return f'<Servicio {self.nombre}>'
+
+class Producto(db.Model):
+    __tablename__ = 'productos'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False)
+    precio = db.Column(db.Float, nullable=False)
+    descripcion = db.Column(db.String(255))
+    imagen_url = db.Column(db.String(255))  # opcional, para mostrar imágenes
+
+    def __repr__(self):
+        return f'<Producto {self.nombre}>'
+
 
 
 class Cita(db.Model):
@@ -58,3 +70,12 @@ class Cita(db.Model):
 
     def __repr__(self):
         return f'<Cita {self.fecha_hora_inicio} - Cliente {self.cliente_id}>'
+
+
+
+class Tarea(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    titulo = db.Column(db.String(100), nullable=False)
+    descripcion = db.Column(db.Text, nullable=True)
+    estado = db.Column(db.String(20), nullable=False, default='pendiente')  # pendiente, en_progreso, completada
+    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)

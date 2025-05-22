@@ -2,8 +2,17 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from models import db, Cliente, Empleado, Servicio, Cita
 from datetime import datetime, timedelta
 from functools import wraps
-
+from models import Servicio, Producto  # Asegúrate de importar tus modelos
+from werkzeug.utils import secure_filename
+import os
+from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
+from models import db
+from urllib.parse import quote_plus
+import time
+from models import Tarea
 app = Flask(__name__)
+
 app.secret_key = 'tu_clave_secreta_aqui'  # IMPORTANTE para usar sesiones
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///salon.db'
@@ -12,6 +21,22 @@ db.init_app(app)
 
 with app.app_context():
     db.create_all()
+    
+UPLOAD_FOLDER = os.path.join('static', 'uploads')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024  # 2 MB max
+
+def allowed_file(filename):
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+# Config DB
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///productos.db'
+
+
+
 
 # Usuario hardcodeado
 USUARIO = {
@@ -28,11 +53,8 @@ def login_required(f):
     return decorated
 
 # PÁGINA PÚBLICA, accesible sin login
-@app.route('/')
-def publica():
-    return render_template('publica.html')
 
-# LOGIN (GET y POST)
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -41,10 +63,13 @@ def login():
         if username == USUARIO['username'] and password == USUARIO['password']:
             session['logged_in'] = True
             flash('Has iniciado sesión correctamente', 'success')
-            return redirect(url_for('index'))
+            return redirect(url_for('admin_index'))  # Aquí la ruta para la admin
         else:
             flash('Usuario o contraseña incorrectos', 'danger')
+    # Mostrar plantilla de login (que debería estar en templates/login.html)
     return render_template('login.html')
+
+
 
 # LOGOUT
 @app.route('/logout')
@@ -56,14 +81,14 @@ def logout():
 # Rutas protegidas, solo para personal logueado
 @app.route('/index')
 @login_required
-def index():
+def index_admin():
     return render_template('index.html')
 
 @app.route('/citas')
 @login_required
 def citas():
     citas = Cita.query.order_by(Cita.fecha_hora_inicio).all()
-    return render_template('citas.html', citas=citas)
+    return render_template('admin/citas.html', citas=citas)
 
 @app.route('/nueva-cita', methods=['GET', 'POST'])
 @login_required
@@ -96,7 +121,7 @@ def nueva_cita():
 
     servicios = Servicio.query.all()
     empleados = Empleado.query.all()
-    return render_template('nueva_cita.html', servicios=servicios, empleados=empleados)
+    return render_template('admin/nueva_cita.html', servicios=servicios, empleados=empleados)
 
 @app.route('/api/citas-json')
 @login_required
@@ -112,7 +137,7 @@ def citas_json():
         })
     return jsonify(eventos)
 
-@app.route('/servicios', methods=['GET', 'POST'])
+@app.route('/admin/servicios', methods=['GET', 'POST'])
 @login_required
 def servicios():
     if request.method == 'POST':
@@ -127,7 +152,7 @@ def servicios():
         return redirect(url_for('servicios'))
 
     lista = Servicio.query.all()
-    return render_template('servicios.html', servicios=lista)
+    return render_template('admin/servicios.html', servicios=lista)
 
 @app.route('/servicio/<int:id>/editar', methods=['GET', 'POST'])
 @login_required
@@ -142,7 +167,7 @@ def editar_servicio(id):
         db.session.commit()
         return redirect(url_for('servicios'))
 
-    return render_template('editar_servicio.html', servicio=servicio)
+    return render_template('admin/editar_servicio.html', servicio=servicio)
 
 @app.route('/servicio/<int:id>/eliminar', methods=['POST'])
 @login_required
@@ -155,7 +180,7 @@ def eliminar_servicio(id):
 @app.route('/calendario')
 @login_required
 def calendario():
-    return render_template('calendario.html')
+    return render_template('admin/calendario.html')
 
 @app.route('/empleados', methods=['GET', 'POST'])
 @login_required
@@ -171,7 +196,7 @@ def empleados():
         return redirect(url_for('empleados'))
 
     lista = Empleado.query.all()
-    return render_template('empleados.html', empleados=lista)
+    return render_template('admin/empleados.html', empleados=lista)
 
 @app.route('/empleado/<int:id>/editar', methods=['GET', 'POST'])
 @login_required
@@ -183,7 +208,7 @@ def editar_empleado(id):
         empleado.telefono = request.form['telefono']
         db.session.commit()
         return redirect(url_for('empleados'))
-    return render_template('editar_empleado.html', empleado=empleado)
+    return render_template('/admin/editar_empleado.html', empleado=empleado)
 
 @app.route('/empleado/<int:id>/eliminar', methods=['POST'])
 @login_required
@@ -191,7 +216,7 @@ def eliminar_empleado(id):
     empleado = Empleado.query.get_or_404(id)
     db.session.delete(empleado)
     db.session.commit()
-    return redirect(url_for('empleados'))
+    return redirect(url_for('/admin/empleados'))
 
 @app.route('/cita/<int:id>/editar', methods=['GET', 'POST'])
 @login_required
@@ -219,7 +244,196 @@ def eliminar_cita(id):
     cita = Cita.query.get_or_404(id)
     db.session.delete(cita)
     db.session.commit()
-    return redirect(url_for('citas'))
+    return redirect(url_for('/admin/citas'))
+
+
+
+
+
+@app.route('/servicios')
+def servicios_publicos():
+    servicios = Servicio.query.all()
+    return render_template('public/servicios.html', servicios=servicios)
+
+@app.route('/productos')
+def productos_publicos():
+    productos = Producto.query.all()
+    for prod in productos:
+        prod.nombre_url = quote_plus(prod.nombre)
+    return render_template('public/productos.html', productos=productos)
+
+@app.route('/admin/productos', methods=['GET', 'POST'])
+@login_required  # Mejor proteger esta ruta
+def admin_productos():
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        descripcion = request.form.get('descripcion')
+        precio = float(request.form['precio'])
+
+        imagen = request.files.get('imagen')  # Recoger archivo
+
+        imagen_url = None
+        if imagen and allowed_file(imagen.filename):
+            filename = secure_filename(imagen.filename)
+            import time
+            filename = f"{int(time.time())}_{filename}"
+            save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+            imagen.save(save_path)
+            imagen_url = f'uploads/{filename}'
+
+        nuevo = Producto(nombre=nombre, descripcion=descripcion, precio=precio, imagen_url=imagen_url)
+        db.session.add(nuevo)
+        db.session.commit()
+        flash('Producto agregado exitosamente', 'success')
+        return redirect(url_for('admin_productos'))
+
+    productos = Producto.query.all()
+    return render_template('admin/productos_admin.html', productos=productos)
+
+
+
+
+@app.route('/admin/productos/editar/<int:id>', methods=['GET', 'POST'])
+@login_required
+def editar_producto(id):
+    prod = Producto.query.get_or_404(id)
+
+    if request.method == 'POST':
+        prod.nombre = request.form['nombre']
+        prod.descripcion = request.form.get('descripcion')
+        prod.precio = float(request.form['precio'])
+
+        # Manejo de imagen
+        if 'imagen' in request.files:
+            file = request.files['imagen']
+            if file and allowed_file(file.filename):
+                # Borrar imagen anterior si existe
+                if prod.imagen_url:
+                    ruta_anterior = os.path.join(app.static_folder, prod.imagen_url.replace('/', os.sep))
+                    if os.path.exists(ruta_anterior):
+                        os.remove(ruta_anterior)
+
+                # Guardar nueva imagen
+                filename = secure_filename(file.filename)
+                filename = f"{int(time.time())}_{filename}"
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(filepath)
+
+                # Guardar ruta en formato web-friendly
+                prod.imagen_url = f"uploads/{filename}"
+
+        db.session.commit()
+        flash('Producto actualizado con éxito', 'success')
+        return redirect(url_for('admin_productos'))
+
+    return render_template('admin/editar_producto.html', producto=prod)
+
+
+
+
+
+
+
+
+
+@app.route('/admin/productos/eliminar/<int:id>', methods=['POST'])
+def eliminar_producto(id):
+    prod = Producto.query.get_or_404(id)
+    db.session.delete(prod)
+    db.session.commit()
+    flash('Producto eliminado', 'warning')
+    return redirect(url_for('admin_productos'))
+
+
+@app.route('/')
+def index():
+    servicios = Servicio.query.all()
+    productos = Producto.query.all()
+    return render_template('publica.html', servicios=servicios, productos=productos)
+
+
+@app.route('/admin')
+@login_required
+def admin_index():
+    servicios = Servicio.query.all()
+    productos = Producto.query.all()
+    return render_template('admin/index.html', servicios=servicios, productos=productos)
+
+
+
+
+@app.route('/tareas', methods=['GET', 'POST'])
+@login_required
+def tareas():
+    if request.method == 'POST':
+        titulo = request.form['titulo']
+        descripcion = request.form['descripcion']
+        nueva_tarea = Tarea(titulo=titulo, descripcion=descripcion)
+        db.session.add(nueva_tarea)
+        db.session.commit()
+        return redirect(url_for('tareas'))
+
+    tareas = Tarea.query.order_by(Tarea.estado).all()
+    return render_template('admin/tareas.html', tareas=tareas)
+
+
+@app.route('/admin/tareas/<int:id>/estado', methods=['POST'])
+@login_required
+def cambiar_estado(id):
+    tarea = Tarea.query.get_or_404(id)
+    nuevo_estado = request.form['estado']
+    tarea.estado = nuevo_estado
+    db.session.commit()
+    return redirect(url_for('tareas'))
+
+@app.route('/admin/tareas/nueva', methods=['GET', 'POST'])
+@login_required
+def nueva_tarea():
+    if request.method == 'POST':
+        titulo = request.form['titulo']
+        descripcion = request.form['descripcion']
+        estado = request.form['estado']
+
+        tarea = Tarea(titulo=titulo, descripcion=descripcion, estado=estado)
+        db.session.add(tarea)
+        db.session.commit()
+        flash('Tarea creada exitosamente', 'success')
+        return redirect(url_for('tareas'))
+
+    return render_template('admin/nueva_tarea.html')
+
+
+
+@app.route('/admin/tareas/editar/<int:id>', methods=['GET', 'POST'])
+@login_required  # Si usas login requerido
+def editar_tarea(id):
+    tarea = Tarea.query.get_or_404(id)
+
+    if request.method == 'POST':
+        tarea.titulo = request.form['titulo']
+        tarea.descripcion = request.form.get('descripcion', '')
+        tarea.estado = request.form['estado']
+
+        db.session.commit()
+        flash('Tarea actualizada exitosamente', 'success')
+        return redirect(url_for('tareas'))
+
+    return render_template('admin/editar_tarea.html', tarea=tarea)
+
+
+@app.route('/admin/tareas/eliminar/<int:id>', methods=['POST'])
+@login_required
+def eliminar_tarea(id):
+    tarea = Tarea.query.get_or_404(id)
+    try:
+        db.session.delete(tarea)
+        db.session.commit()
+        flash('Tarea eliminada correctamente.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Error al eliminar la tarea.', 'danger')
+    return redirect(url_for('tareas'))
 
 
 if __name__ == '__main__':

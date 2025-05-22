@@ -1,0 +1,29 @@
+{% extends 'admin/layout.html' %}
+
+{% block content %}
+<h2 class="mb-4">Nueva Tarea</h2>
+
+<form method="POST" action="{{ url_for('nueva_tarea') }}">
+  <div class="mb-3">
+    <label for="titulo" class="form-label">Título</label>
+    <input type="text" class="form-control" id="titulo" name="titulo" required>
+  </div>
+  
+  <div class="mb-3">
+    <label for="descripcion" class="form-label">Descripción</label>
+    <textarea class="form-control" id="descripcion" name="descripcion" rows="3"></textarea>
+  </div>
+
+  <div class="mb-3">
+    <label for="estado" class="form-label">Estado</label>
+    <select class="form-select" id="estado" name="estado" required>
+      <option value="Pendiente">Pendiente</option>
+      <option value="En Progreso">En Progreso</option>
+      <option value="Completada">Completada</option>
+    </select>
+  </div>
+
+  <button type="submit" class="btn btn-primary">Guardar</button>
+  <a href="{{ url_for('tareas') }}" class="btn btn-secondary ms-2">Cancelar</a>
+</form>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends 'admin/layout.html' %}
+{% block content %}
+<h2>➕ Nueva Cita</h2>
+<form method="POST">
+    <div class="mb-3">
+        <label>Nombre del Cliente</label>
+        <input type="text" name="nombre" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label>Teléfono</label>
+        <input type="text" name="telefono" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label>Servicio</label>
+        <select name="servicio" class="form-select" required>
+            {% for servicio in servicios %}
+            <option value="{{ servicio.id }}">{{ servicio.nombre }} ({{ servicio.duracion_minutos }} min)</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="mb-3">
+        <label>Empleado</label>
+        <select name="empleado" class="form-select" required>
+            {% for empleado in empleados %}
+            <option value="{{ empleado.id }}">{{ empleado.nombre }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="mb-3">
+        <label>Fecha y hora</label>
+        <input type="datetime-local" name="fecha_hora" class="form-control" required>
+    </div>
+    <button class="btn btn-primary">Agendar Cita</button>
+</form>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends 'admin/layout.html' %}
+
+{% block content %}
+<h2 class="mb-3"><i class="bi bi-check2-square me-2"></i>Gestión de Tareas</h2>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <a href="{{ url_for('nueva_tarea') }}" class="btn btn-primary rounded-pill px-3 py-1 shadow-sm">
+    <i class="bi bi-plus-circle"></i> Nueva Tarea
+  </a>
+</div>
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+  {% for tarea in tareas %}
+    {% set estado = tarea.estado %}
+    <div class="col">
+      <div class="card shadow-sm h-100 border-0 rounded-3 overflow-hidden">
+        <div class="card-header py-2 estado-header d-flex align-items-center gap-2
+             {% if estado == 'pendiente' %}bg-pendiente
+             {% elif estado == 'en_progreso' %}bg-en_progreso
+             {% elif estado == 'completada' %}bg-completada
+             {% else %}bg-otro
+             {% endif %}">
+          {% if estado == 'pendiente' %}
+            <i class="bi bi-hourglass-split fs-5 animate-icon"></i>
+          {% elif estado == 'en_progreso' %}
+            <i class="bi bi-arrow-repeat fs-5 animate-icon spin"></i>
+          {% elif estado == 'completada' %}
+            <i class="bi bi-check-circle-fill fs-5 animate-icon"></i>
+          {% else %}
+            <i class="bi bi-question-circle fs-5 animate-icon"></i>
+          {% endif %}
+          <strong class="text-uppercase fw-semibold mb-0 fs-6">{{ estado.replace('_', ' ').capitalize() }}</strong>
+        </div>
+        <div class="card-body py-2 px-3">
+          <h5 class="card-title fw-semibold mb-1 fs-6">{{ tarea.titulo }}</h5>
+          <p class="card-text text-muted mb-1 fs-7">{{ tarea.descripcion or 'Sin descripción' }}</p>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-between border-0 pt-1 pb-2 px-3">
+          <a href="{{ url_for('editar_tarea', id=tarea.id) }}" class="btn btn-outline-primary btn-sm rounded-pill px-3 py-1 fs-7">
+            <i class="bi bi-pencil-square"></i> Editar
+          </a>
+          <form action="{{ url_for('eliminar_tarea', id=tarea.id) }}" method="POST" class="d-inline">
+            <button class="btn btn-outline-danger btn-sm rounded-pill px-3 py-1 fs-7" onclick="return confirm('¿Eliminar tarea?');">
+              <i class="bi bi-trash"></i> Eliminar
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <div class="col-12">
+      <div class="alert alert-info text-center rounded-3 shadow-sm py-2 fs-6" role="alert">
+        <i class="bi bi-info-circle"></i> No hay tareas registradas.
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<style>
+  .estado-header {
+    border-bottom: none;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    border-radius: 0 0 0.75rem 0.75rem;
+    transition: background 0.4s ease;
+  }
+
+  .bg-pendiente {
+    background: rgba(253, 160, 133, 0.35);
+    color: #d35400;
+    font-weight: 600;
+  }
+
+  .bg-en_progreso {
+    background: rgba(102, 166, 255, 0.35);
+    color: #21618c;
+    font-weight: 600;
+  }
+
+  .bg-completada {
+    background: rgba(161, 255, 206, 0.35);
+    color: #27ae60;
+    font-weight: 600;
+  }
+
+  .bg-otro {
+    background: rgba(211, 204, 227, 0.35);
+    color: #7a75a8;
+    font-weight: 600;
+  }
+
+  .animate-icon {
+    transition: transform 0.3s ease;
+  }
+
+  .animate-icon:hover {
+    transform: scale(1.2);
+  }
+
+  .spin {
+    animation: spin 2s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg);}
+    100% { transform: rotate(360deg);}
+  }
+
+  .btn-outline-primary:hover {
+    background-color: #4a7fff;
+    color: white;
+    box-shadow: 0 4px 12px rgba(74,127,255,0.4);
+  }
+
+  .btn-outline-danger:hover {
+    background-color: #ff6b6b;
+    color: white;
+    box-shadow: 0 4px 12px rgba(255,107,107,0.4);
+  }
+
+  .card-title, .card-text {
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 576px) {
+    .card-body {
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+    }
+    .card-footer {
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+    }
+  }
+</style>
+{% endblock %}
