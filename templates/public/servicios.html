@@ -1,23 +1,21 @@
 {% extends 'public/layout_public.html' %}
 
 {% block content %}
-<h2 class="text-center mb-4">💅 Nuestros Servicios</h2>
-
 <section id="servicios" class="py-5">
     <div class="container">
-        <h2 class="text-center section-title"><i class="bi bi-stars"></i> Nuestros Servicios</h2>
+        <h2 class="text-center mb-5" data-aos="fade-up">
+            <i class="bi bi-stars" style="color:#e29578;"></i> Nuestros Servicios
+        </h2>
         <div class="row g-4">
             {% for servicio in servicios %}
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body text-center">
-                        <i class="bi bi-scissors display-5 text-secondary mb-3"></i>
-                        <h5 class="card-title">{{ servicio.nombre }}</h5>
-                        <p class="card-text">
-                            Duración: {{ servicio.duracion_minutos }} min<br>
-                            ₡{{ '{:,.2f}'.format(servicio.precio) }}
-                        </p>
-                    </div>
+            <div class="col-md-4" data-aos="zoom-in" data-aos-delay="{{ loop.index0 * 100 }}">
+                <div class="card service-card h-100 text-center">
+                    <i class="bi bi-scissors service-icon"></i>
+                    <h5 class="card-title fw-semibold">{{ servicio.nombre }}</h5>
+                    <p class="card-text">
+                        Duración: {{ servicio.duracion_minutos }} min<br>
+                        ₡{{ '{:,.2f}'.format(servicio.precio) }}
+                    </p>
                 </div>
             </div>
             {% endfor %}

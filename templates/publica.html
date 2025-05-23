@@ -1,102 +1,591 @@
-{% extends 'public/layout_public.html' %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Salón de Belleza - MoonSun</title>
 
-{% block content %}
+    <!-- Tipografía moderna -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet" />
 
-<!-- Hero principal -->
-<section class="hero text-center bg-dark text-white py-5">
+    <!-- Bootstrap y Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <!-- AOS para animaciones on scroll -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
+
+    <!-- Estilo personalizado -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fff8f5;
+            color: #333;
+        }
+        /* Navbar */
+        .navbar {
+            background-color: #fff !important;
+            border-bottom: 1px solid #f3d6cd;
+            box-shadow: 0 2px 6px rgba(227, 149, 120, 0.1);
+        }
+        .navbar-brand {
+            font-weight: 700;
+            color: #e29578 !important;
+            font-size: 1.6rem;
+            letter-spacing: 2px;
+            transition: color 0.3s ease;
+        }
+        .navbar-brand i {
+            margin-right: 10px;
+            color: #e29578;
+            transition: transform 0.4s ease;
+        }
+        .navbar-brand:hover i {
+            transform: rotate(15deg);
+        }
+        .nav-link {
+            color: #7a6f6f !important;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        .nav-link:hover {
+            color: #e29578 !important;
+        }
+        /* Hero section */
+        .hero {
+            height: 75vh;
+            background:
+                linear-gradient(rgba(249, 197, 209, 0.6), rgba(253, 221, 230, 0.6)),
+                url("{{ url_for('static', filename='images/hero.jpg') }}") center center/cover no-repeat;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: #fff;
+            overflow: hidden;
+        }
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 600px;
+        }
+        .hero-content h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            animation: fadeInDown 1.5s ease forwards;
+        }
+        .hero-content p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            text-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            animation: fadeInUp 1.5s ease forwards;
+            animation-delay: 0.5s;
+            opacity: 0;
+            animation-fill-mode: forwards;
+        }
+        .btn-primary {
+            background-color: #e29578;
+            border: none;
+            padding: 0.75rem 2rem;
+            font-size: 1.2rem;
+            border-radius: 30px;
+            box-shadow: 0 4px 15px rgba(226, 149, 120, 0.4);
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #d67357;
+            transform: scale(1.05);
+        }
+        @keyframes fadeInDown {
+            0% {
+                opacity: 0;
+                transform: translateY(-40px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        /* Servicios */
+        .service-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 6px 15px rgba(226, 149, 120, 0.2);
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+            background-color: #fff;
+        }
+        .service-card:hover {
+            transform: translateY(-15px);
+            box-shadow: 0 12px 30px rgba(226, 149, 120, 0.35);
+        }
+        .service-icon {
+            font-size: 3rem;
+            color: #e29578;
+            margin-bottom: 1rem;
+            transition: color 0.3s ease;
+        }
+        /* Testimonios */
+        .card p {
+            font-style: italic;
+        }
+        /* Footer */
+        footer {
+            background-color: #f9e6df;
+            padding: 2rem 0;
+            text-align: center;
+            color: #6b4c3b;
+            font-weight: 500;
+        }
+        /* Carousel Galería */
+        .carousel-inner img {
+            height: 400px;
+            object-fit: cover;
+            border-radius: 15px;
+        }
+        /* Equipo */
+        .team-member img {
+            border-radius: 50%;
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 10px rgba(226, 149, 120, 0.3);
+            transition: transform 0.3s ease;
+        }
+        .team-member:hover img {
+            transform: scale(1.1);
+        }
+        /* FAQ */
+        .faq-item {
+            margin-bottom: 1.25rem;
+        }
+        /* Contacto */
+        .contact-form input, .contact-form textarea {
+            border-radius: 10px;
+            border: 1px solid #e29578;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            resize: none;
+        }
+        .contact-form button {
+            background-color: #e29578;
+            border: none;
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 30px;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        .contact-form button:hover {
+            background-color: #d67357;
+        }
+        /* Blog */
+        .blog-post {
+            border-radius: 15px;
+            box-shadow: 0 6px 15px rgba(226, 149, 120, 0.15);
+            transition: transform 0.3s ease;
+            background-color: white;
+        }
+        .blog-post:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 12px 25px rgba(226, 149, 120, 0.25);
+        }
+        .blog-post img {
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+            object-fit: cover;
+            height: 180px;
+            width: 100%;
+        }
+        /* Promociones */
+        .promo-card {
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(226, 149, 120, 0.2);
+            background-color: white;
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        .promo-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(226, 149, 120, 0.3);
+        }
+    </style>
+
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light shadow-sm">
     <div class="container">
-        <h1 class="display-4 mb-3">Bienvenidos al Salón de Belleza</h1>
-        <p class="lead">Transformamos tu estilo con cuidado, pasión y profesionalismo.</p>
+        <a class="navbar-brand" href="{{ url_for('index') }}">
+            <i class="bi bi-scissors"></i> MoonSun
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+            <ul class="navbar-nav gap-3">
+                <li class="nav-item">
+                    <a href="{{ url_for('index') }}" class="nav-link">
+                        <i class="bi bi-house-door"></i> Inicio
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('servicios_publicos') }}" class="nav-link">
+                        <i class="bi bi-gear-fill"></i> Servicios
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('productos_publicos') }}" class="nav-link">
+                        <i class="bi bi-bag-heart"></i> Productos
+                    </a>
+                </li>
+                {% if session.get('logged_in') %}
+                <li class="nav-item">
+                    <a href="{{ url_for('admin_index') }}" class="nav-link text-danger">
+                        <i class="bi bi-speedometer2"></i> Administración
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('logout') }}" class="nav-link text-danger">
+                        <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+                    </a>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a href="{{ url_for('login') }}" class="nav-link text-success">
+                        <i class="bi bi-box-arrow-in-right"></i> Iniciar sesión
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
     </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero py-5 text-white text-center">
+  <div class="hero-content container" data-aos="fade-down" data-aos-duration="1200">
+    <h1 class="display-4 fw-bold mb-3">Brilla con tu mejor versión</h1>
+    <p class="lead mb-4">Descubre nuestros servicios exclusivos para realzar tu belleza natural</p>
+    <div class="d-flex justify-content-center gap-3 flex-wrap">
+      <a href="{{ url_for('servicios_publicos') }}" class="btn btn-primary btn-lg rounded-pill shadow">
+        <i class="bi bi-stars"></i> Ver Servicios
+      </a>
+      <a href="{{ url_for('productos_publicos') }}" class="btn btn-outline-light btn-lg rounded-pill shadow">
+        <i class="bi bi-bag-heart"></i> Ver Productos
+      </a>
+    </div>
+  </div>
 </section>
 
-<!-- Sobre Nosotros -->
-<section class="py-5 bg-light">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-md-6 mb-4 mb-md-0">
-                <img src="https://via.placeholder.com/500x300" class="img-fluid rounded shadow" alt="Equipo del salón">
+<!-- Servicios destacados -->
+<section class="container my-5">
+    <h2 class="text-center mb-4" data-aos="fade-up">Nuestros Servicios</h2>
+    <div class="row g-4">
+        <div class="col-md-4" data-aos="zoom-in" data-aos-delay="100">
+            <div class="card service-card text-center p-4">
+                <i class="bi bi-scissors service-icon"></i>
+                <h5>Corte y Estilo</h5>
+                <p>Transforma tu look con nuestros expertos estilistas.</p>
             </div>
-            <div class="col-md-6">
-                <h2 class="mb-3"><i class="bi bi-heart-fill text-danger"></i> Sobre Nosotros</h2>
-                <p>En nuestro salón, la belleza es una experiencia. Con más de 10 años en la industria, ofrecemos un ambiente acogedor, técnicas modernas y un equipo apasionado por ayudarte a lucir y sentirte mejor.</p>
-                <p>Nuestra misión es brindarte un trato personalizado que combine profesionalismo y calidez humana.</p>
+        </div>
+        <div class="col-md-4" data-aos="zoom-in" data-aos-delay="200">
+            <div class="card service-card text-center p-4">
+                <i class="bi bi-droplet service-icon"></i>
+                <h5>Tratamientos Capilares</h5>
+                <p>Cuida y fortalece tu cabello con nuestros tratamientos naturales.</p>
+            </div>
+        </div>
+        <div class="col-md-4" data-aos="zoom-in" data-aos-delay="300">
+            <div class="card service-card text-center p-4">
+                <i class="bi bi-brush service-icon"></i>
+                <h5>Maquillaje Profesional</h5>
+                <p>Resalta tu belleza para cualquier ocasión especial.</p>
             </div>
         </div>
     </div>
 </section>
 
 <!-- Testimonios -->
-<section class="py-5">
-    <div class="container">
-        <h2 class="text-center mb-5"><i class="bi bi-chat-heart"></i> Testimonios</h2>
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="card shadow-sm h-100">
-                    <div class="card-body">
-                        <p class="card-text">“¡Simplemente increíble! Me dejaron el cabello justo como quería. Muy profesionales y amables.”</p>
-                        <div class="text-end"><strong>- María C.</strong></div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card shadow-sm h-100">
-                    <div class="card-body">
-                        <p class="card-text">“El ambiente del salón es relajante, limpio y moderno. ¡Me encantó mi experiencia!”</p>
-                        <div class="text-end"><strong>- Laura G.</strong></div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card shadow-sm h-100">
-                    <div class="card-body">
-                        <p class="card-text">“Excelente atención. Siempre salgo feliz y con una sonrisa. ¡Lo recomiendo totalmente!”</p>
-                        <div class="text-end"><strong>- Ana T.</strong></div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<section class="container my-5">
+  <h2 class="text-center mb-4" data-aos="fade-up">Lo que dicen nuestras clientas</h2>
+  <div class="row justify-content-center g-4">
+    <div class="col-md-4" data-aos="fade-right" data-aos-delay="100">
+      <div class="card p-4 shadow-sm" style="border-radius: 15px;">
+        <p class="fst-italic">"El mejor salón en la ciudad, el equipo es súper profesional y me dejaron espectacular."</p>
+        <h6 class="text-end fw-bold mb-0">- Mariana G.</h6>
+      </div>
     </div>
+    <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+      <div class="card p-4 shadow-sm" style="border-radius: 15px;">
+        <p class="fst-italic">"Me encanta el trato y los tratamientos capilares, mi cabello nunca se había sentido tan sano."</p>
+        <h6 class="text-end fw-bold mb-0">- Andrea P.</h6>
+      </div>
+    </div>
+    <div class="col-md-4" data-aos="fade-left" data-aos-delay="300">
+      <div class="card p-4 shadow-sm" style="border-radius: 15px;">
+        <p class="fst-italic">"Perfecto para ocasiones especiales, el maquillaje duró toda la noche y me sentí divina."</p>
+        <h6 class="text-end fw-bold mb-0">- Sofía L.</h6>
+      </div>
+    </div>
+  </div>
 </section>
 
 <!-- Galería -->
-<section class="py-5 bg-light">
-    <div class="container">
-        <h2 class="text-center mb-5"><i class="bi bi-camera-fill"></i> Galería</h2>
-        <div class="row g-3">
-            {% for i in range(1, 7) %}
-            <div class="col-6 col-md-4">
-                <img src="https://via.placeholder.com/400x300?text=Foto+{{ i }}" class="img-fluid rounded shadow-sm" alt="Galería {{ i }}">
-            </div>
-            {% endfor %}
-        </div>
+<section class="container my-5">
+  <h2 class="text-center mb-4" data-aos="fade-up">Nuestra Galería</h2>
+  <div id="galleryCarousel" class="carousel slide" data-bs-ride="carousel" data-aos="zoom-in">
+    <div class="carousel-inner rounded-4 shadow">
+      <div class="carousel-item active">
+        <img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=900&q=80" class="d-block w-100" alt="Galería 1">
+      </div>
+      <div class="carousel-item">
+        <img src="https://images.unsplash.com/photo-1526045612212-70caf35c14df?auto=format&fit=crop&w=900&q=80" class="d-block w-100" alt="Galería 2">
+      </div>
+      <div class="carousel-item">
+        <img src="https://images.unsplash.com/photo-1533777324565-a04df0e527b7?auto=format&fit=crop&w=900&q=80" class="d-block w-100" alt="Galería 3">
+      </div>
     </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#galleryCarousel" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Anterior</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#galleryCarousel" data-bs-slide="next">
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Siguiente</span>
+    </button>
+  </div>
 </section>
 
-<!-- Contacto -->
-<section class="py-5">
-    <div class="container">
-        <h2 class="text-center mb-4"><i class="bi bi-envelope-paper-heart"></i> Contáctanos</h2>
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <form method="POST" action="">
-                    <div class="mb-3">
-                        <label for="nombre" class="form-label">Nombre</label>
-                        <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Tu nombre" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="correo" class="form-label">Correo electrónico</label>
-                        <input type="email" class="form-control" id="correo" name="correo" placeholder="nombre@ejemplo.com" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="mensaje" class="form-label">Mensaje</label>
-                        <textarea class="form-control" id="mensaje" name="mensaje" rows="4" placeholder="Escribe tu mensaje..." required></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> Enviar</button>
-                </form>
-            </div>
-        </div>
+<!-- NUEVAS SECCIONES -->
+
+<!-- Equipo -->
+<section class="container my-5">
+  <h2 class="text-center mb-4" data-aos="fade-up">Conoce a Nuestro Equipo</h2>
+  <div class="row justify-content-center g-4">
+    <div class="col-md-3 text-center team-member" data-aos="flip-left" data-aos-delay="100">
+      <img src="static/angie.jpeg" alt="Angelica Luna" />
+      <h5>Angelica Luna</h5>
+      <p>Estilista Principal</p>
     </div>
+    <div class="col-md-3 text-center team-member" data-aos="flip-left" data-aos-delay="200">
+      <img src="static/rebe.jpeg" alt="Rebeca Luna" />
+      <h5>Rebeca Luna</h5>
+      <p>Especialista en Tratamientos</p>
+    </div>
+    <div class="col-md-3 text-center team-member" data-aos="flip-left" data-aos-delay="300">
+      <img src="static/rodra.jpeg" alt="Laura Martínez" />
+      <h5>Edwin Rodriguez</h5>
+      <p>Gerente General</p>
+    </div>
+  </div>
 </section>
 
-{% endblock %}
+<!-- FAQ -->
+<section class="container my-5">
+  <h2 class="text-center mb-4" data-aos="fade-up">Preguntas Frecuentes</h2>
+  <div class="accordion" id="faqAccordion" data-aos="fade-up" data-aos-delay="100">
+    <div class="accordion-item faq-item">
+      <h2 class="accordion-header" id="faq1">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFaq1" aria-expanded="false" aria-controls="collapseFaq1">
+          ¿Cuáles son los horarios de atención?
+        </button>
+      </h2>
+      <div id="collapseFaq1" class="accordion-collapse collapse" aria-labelledby="faq1" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          Atendemos de lunes a sábado de 9:00 am a 7:00 pm.
+        </div>
+      </div>
+    </div>
+    <div class="accordion-item faq-item">
+      <h2 class="accordion-header" id="faq2">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFaq2" aria-expanded="false" aria-controls="collapseFaq2">
+          ¿Se necesita cita previa?
+        </button>
+      </h2>
+      <div id="collapseFaq2" class="accordion-collapse collapse" aria-labelledby="faq2" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          Sí, recomendamos reservar cita para asegurar tu atención personalizada.
+        </div>
+      </div>
+    </div>
+    <div class="accordion-item faq-item">
+      <h2 class="accordion-header" id="faq3">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFaq3" aria-expanded="false" aria-controls="collapseFaq3">
+          ¿Qué métodos de pago aceptan?
+        </button>
+      </h2>
+      <div id="collapseFaq3" class="accordion-collapse collapse" aria-labelledby="faq3" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          Aceptamos efectivo, tarjetas de crédito/débito y pagos móviles.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- Blog -->
+<section class="container my-5">
+  <h2 class="text-center mb-4" data-aos="fade-up">Últimas Noticias y Consejos</h2>
+  <div class="row g-4">
+    <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+      <div class="blog-post">
+        <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80" alt="Tendencias 2025" />
+        <div class="p-3">
+          <h5>Tendencias de belleza para 2025</h5>
+          <p>Descubre qué estilos y colores serán los favoritos este año.</p>
+          <a href="" class="btn btn-outline-primary btn-sm">Leer más</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+      <div class="blog-post">
+        <img src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=600&q=80" alt="Cuidado del cabello" />
+        <div class="p-3">
+          <h5>Consejos para un cabello saludable</h5>
+          <p>Rutinas simples para mantener tu cabello brillante y fuerte.</p>
+          <a href="" class="btn btn-outline-primary btn-sm">Leer más</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+      <div class="blog-post">
+        <img src="https://images.unsplash.com/photo-1522199755839-a2bacb67c546?auto=format&fit=crop&w=600&q=80" alt="Maquillaje natural" />
+        <div class="p-3">
+          <h5>Maquillaje natural para el día a día</h5>
+          <p>Tips para lucir fresca y radiante sin complicaciones.</p>
+          <a href="" class="btn btn-outline-primary btn-sm">Leer más</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Promociones -->
+<section class="container my-5">
+  <h2 class="text-center mb-4" data-aos="fade-up">Promociones Especiales</h2>
+  <div class="row justify-content-center g-4">
+    <div class="col-md-4" data-aos="zoom-in" data-aos-delay="100">
+      <div class="promo-card p-4">
+        <h5>20% de descuento en cortes</h5>
+        <p>Disfruta de un nuevo look con un descuento especial hasta fin de mes.</p>
+        <a href="{{ url_for('servicios_publicos') }}" class="btn btn-outline-success btn-sm">Reserva ya</a>
+      </div>
+    </div>
+    <div class="col-md-4" data-aos="zoom-in" data-aos-delay="200">
+      <div class="promo-card p-4">
+        <h5>Combo Tratamiento + Maquillaje</h5>
+        <p>Paquete ideal para tu evento especial con precio preferencial.</p>
+        <a href="{{ url_for('servicios_publicos') }}" class="btn btn-outline-success btn-sm">Más info</a>
+      </div>
+    </div>
+    <div class="col-md-4" data-aos="zoom-in" data-aos-delay="300">
+      <div class="promo-card p-4">
+        <h5>Productos con envío gratis</h5>
+        <p>Compra tus productos favoritos y recibe envío gratis en pedidos mayores a $50.</p>
+        <a href="{{ url_for('productos_publicos') }}" class="btn btn-outline-success btn-sm">Comprar ahora</a>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- Redes Sociales -->
+<!-- Redes Sociales Estilo Moderno -->
+<section class="container my-5">
+  <h2 class="text-center mb-5" data-aos="fade-up" style="font-weight: 700; color: #444;">Síguenos en Redes Sociales</h2>
+
+  <div class="row justify-content-center g-4" data-aos="fade-up" data-aos-duration="1000">
+    <!-- Facebook -->
+    <div class="col-12 col-sm-6 col-md-4">
+      <a href="https://www.facebook.com/tu_pagina" target="_blank" class="social-card facebook d-flex flex-column align-items-center text-center p-4 rounded-4 shadow-sm text-white text-decoration-none">
+        <i class="bi bi-facebook" style="font-size: 3.5rem;"></i>
+        <h5 class="mt-3 mb-1">Facebook</h5>
+        <p class="mb-0">Entérate de nuestras últimas noticias y promociones</p>
+      </a>
+    </div>
+
+    <!-- Instagram -->
+    <div class="col-12 col-sm-6 col-md-4">
+      <a href="https://www.instagram.com/tu_usuario" target="_blank" class="social-card instagram d-flex flex-column align-items-center text-center p-4 rounded-4 shadow-sm text-white text-decoration-none">
+        <i class="bi bi-instagram" style="font-size: 3.5rem;"></i>
+        <h5 class="mt-3 mb-1">Instagram</h5>
+        <p class="mb-0">Descubre inspiración y novedades en nuestro feed</p>
+      </a>
+    </div>
+
+    <!-- TikTok -->
+    <div class="col-12 col-sm-6 col-md-4">
+      <a href="https://www.tiktok.com/@tu_usuario" target="_blank" class="social-card tiktok d-flex flex-column align-items-center text-center p-4 rounded-4 shadow-sm text-white text-decoration-none">
+        <i class="bi bi-tiktok" style="font-size: 3.5rem;"></i>
+        <h5 class="mt-3 mb-1">TikTok</h5>
+        <p class="mb-0">Mira nuestros videos más creativos y divertidos</p>
+      </a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .social-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .social-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+  }
+  .facebook {
+    background: #1877F2; /* Azul Facebook */
+  }
+  .instagram {
+    background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
+  }
+  .tiktok {
+    background: linear-gradient(45deg, #69C9D0, #EE1D52);
+  }
+</style>
+
+
+<!-- Footer -->
+<footer class="mt-5">
+    <div class="container">
+        <p>© 2025 MoonSun Salón de Belleza. Todos los derechos reservados.</p>
+        <p>Contacto: contacto@moonsun.com | Teléfono: +52 55 1234 5678</p>
+        <p>
+            Síguenos:
+            <a href="#" class="text-decoration-none text-dark mx-1"><i class="bi bi-facebook"></i></a>
+            <a href="#" class="text-decoration-none text-dark mx-1"><i class="bi bi-instagram"></i></a>
+            <a href="#" class="text-decoration-none text-dark mx-1"><i class="bi bi-twitter"></i></a>
+        </p>
+    </div>
+
+    
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+    AOS.init({
+        once: true,
+        duration: 1000,
+    });
+</script>
+
+{% block scripts %}{% endblock %}
+
+</body>
+</html>
