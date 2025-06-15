@@ -436,5 +436,11 @@ def eliminar_tarea(id):
     return redirect(url_for('tareas'))
 
 
+
+@app.route("/catalogo")
+def catalogo():
+    return render_template("catalogo.html")
+
+
 if __name__ == '__main__':
-    app.run(port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
