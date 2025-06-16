@@ -2,6 +2,103 @@
 {% block content %}
     <div class="text-center">
         <h2>Bienvenido al sistema de gestión del salón</h2>
-        <p>Usa el menú para ver o agendar citas.</p>
+      
     </div>
+
+
+
+
+
+<div class="container py-5">
+    <div class="row g-4">
+
+        
+            <h3>Panel del Administrador</h3>
+            <div class="col-md-4">
+                <div class="card card-option shadow">
+                    <div class="card-body text-center">
+                        <i class="bi bi-people-fill fs-2 text-primary"></i>
+                        <h5 class="card-title mt-2">Gestionar empleados</h5>
+                        <a href="/empleados" class="btn btn-primary btn-sm mt-2">Ir</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-option shadow">
+                    <div class="card-body text-center">
+                        <i class="bi bi-person-bounding-box fs-2 text-primary"></i>
+                        <h5 class="card-title mt-2">Gestionar Citas</h5>
+                        <a href="citas" class="btn btn-primary btn-sm mt-2">Gestionar</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-option shadow">
+                    <div class="card-body text-center">
+                        <i class="bi bi-box-seam fs-2 text-primary"></i>
+                        <h5 class="card-title mt-2">Productos</h5>
+                        <a href="/admin/productos" class="btn btn-primary btn-sm mt-2">Ver</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card card-option shadow">
+                    <div class="card-body text-center">
+                        <i class="bi bi-cart-plus fs-2 text-success"></i>
+                        <h5 class="card-title mt-2">Ordenes de Compra</h5>
+                        <a href="#" class="btn btn-success btn-sm mt-2">Crear</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-option shadow">
+                    <div class="card-body text-center">
+                        <i class="bi bi-box2-heart fs-2 text-success"></i>
+                        <h5 class="card-title mt-2">Administrar Proveedores</h5>
+                        <a href="#" class="btn btn-success btn-sm mt-2">Ver</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-option shadow">
+                    <div class="card-body text-center">
+                        <i class="bi bi-clock-history fs-2 text-success"></i>
+                        <h5 class="card-title mt-2">Tareas</h5>
+                        <a href="/tareas" class="btn btn-success btn-sm mt-2">Ver</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-option shadow">
+                    <div class="card-body text-center">
+                        <i class="bi bi-bag-fill fs-2 text-warning"></i>
+                        <h5 class="card-title mt-2">Catálogo</h5>
+                        <a href="/admin/catalogo" class="btn btn-warning btn-sm mt-2">Explorar</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-option shadow">
+                    <div class="card-body text-center">
+                        <i class="bi bi-clipboard-check fs-2 text-warning"></i>
+                        <h5 class="card-title mt-2">Pedidos</h5>
+                        <a href="/pedidos" class="btn btn-warning btn-sm mt-2">Ver</a>
+                    </div>
+                </div>
+            </div>
+
+       
+        
+        
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
+
+
+
 {% endblock %}

@@ -25,7 +25,8 @@ with app.app_context():
 UPLOAD_FOLDER = os.path.join('static', 'uploads')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024  # 2 MB max
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50 MB
+
 
 def allowed_file(filename):
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
@@ -82,7 +83,7 @@ def logout():
 @app.route('/index')
 @login_required
 def index_admin():
-    return render_template('index.html')
+    return render_template('admin/index.html')
 
 @app.route('/citas')
 @login_required
@@ -440,6 +441,33 @@ def eliminar_tarea(id):
 @app.route("/catalogo")
 def catalogo():
     return render_template("catalogo.html")
+
+
+import os
+
+RUTA_CATALOGO = os.path.join('static', 'pdf', 'catalogo.pdf')
+
+@app.route('/admin/catalogo', methods=['GET'])
+@login_required
+def panel_catalogo():
+    mensaje = request.args.get('mensaje')
+    catalogo_existe = os.path.exists(RUTA_CATALOGO)
+    return render_template('admin/gestionar_catalogo.html', mensaje=mensaje, catalogo_existe=catalogo_existe)
+
+@app.route('/admin/catalogo/subir', methods=['POST'])
+def subir_catalogo():
+    archivo = request.files.get('pdf')
+    if archivo and archivo.filename.endswith('.pdf'):
+        archivo.save(RUTA_CATALOGO)
+        return redirect(url_for('panel_catalogo', mensaje="Catálogo actualizado correctamente."))
+    return redirect(url_for('panel_catalogo', mensaje="Error: archivo no válido."))
+
+@app.route('/admin/catalogo/eliminar', methods=['POST'])
+def eliminar_catalogo():
+    if os.path.exists(RUTA_CATALOGO):
+        os.remove(RUTA_CATALOGO)
+        return redirect(url_for('panel_catalogo', mensaje="Catálogo eliminado."))
+    return redirect(url_for('panel_catalogo', mensaje="No hay catálogo para eliminar."))
 
 
 if __name__ == '__main__':
