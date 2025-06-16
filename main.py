@@ -1,19 +1,15 @@
-UPLOAD_FOLDER = os.path.join('static', 'uploads')
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from models import db, Cliente, Empleado, Servicio, Cita
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 from functools import wraps
-from models import Servicio, Producto  # Asegúrate de importar tus modelos
+from models import Servicio, Producto, Proveedor, OrdenCompra, DetalleOrdenCompra  # Asegúrate de importar tus modelos
 from werkzeug.utils import secure_filename
 import os,logging
 from werkzeug.utils import secure_filename
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
 from models import db
 from urllib.parse import quote_plus
-import time
+import time,os
 from models import Tarea
 app = Flask(__name__)
 
@@ -485,6 +481,113 @@ def eliminar_catalogo():
         os.remove(RUTA_CATALOGO)
         return redirect(url_for('panel_catalogo', mensaje="Catálogo eliminado."))
     return redirect(url_for('panel_catalogo', mensaje="No hay catálogo para eliminar."))
+
+
+
+@app.route('/admin/proveedores')
+def vista_proveedores():
+    lista_proveedores = Proveedor.query.all()
+    return render_template('admin/proveedores.html', proveedores=lista_proveedores)
+
+
+
+@app.route('/admin/proveedores/nuevo', methods=['GET', 'POST'])
+def nuevo_proveedor():
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        contacto = request.form['contacto']
+        telefono = request.form['telefono']
+        email = request.form['email']
+        direccion = request.form['direccion']
+
+        nuevo = Proveedor(
+            nombre=nombre,
+            contacto=contacto,
+            telefono=telefono,
+            email=email,
+            direccion=direccion
+        )
+
+        db.session.add(nuevo)
+        db.session.commit()
+
+        return redirect(url_for('vista_proveedores'))
+
+    # Si es GET, simplemente renderiza el formulario
+    return render_template('admin/nuevo_proveedor.html')
+
+
+
+@app.route('/admin/proveedor/editar/<int:id>', methods=['POST'])
+def editar_proveedor(id):
+    proveedor = Proveedor.query.get_or_404(id)
+    proveedor.nombre = request.form['nombre']
+    proveedor.contacto = request.form['contacto']
+    proveedor.telefono = request.form['telefono']
+    proveedor.email = request.form['email']
+    proveedor.direccion = request.form['direccion']
+    db.session.commit()
+    return redirect(url_for('vista_proveedores'))
+
+@app.route('/admin/proveedor/eliminar/<int:id>', methods=['POST'])
+def eliminar_proveedor(id):
+    proveedor = Proveedor.query.get_or_404(id)
+    db.session.delete(proveedor)
+    db.session.commit()
+    return redirect(url_for('vista_proveedores'))
+
+
+
+@app.route('/ordenes')
+def listar_ordenes():
+    ordenes = OrdenCompra.query.order_by(OrdenCompra.fecha_creacion.desc()).all()
+    return render_template('/admin/ordenes.html', ordenes=ordenes)
+
+
+@app.route('/ordenes/nueva', methods=['GET', 'POST'])
+def nueva_orden():
+    proveedores = Proveedor.query.all()
+    productos = Producto.query.all()
+    
+    if request.method == 'POST':
+        proveedor_id = request.form.get('proveedor')
+        productos_ids = request.form.getlist('producto[]')
+        cantidades = request.form.getlist('cantidad[]')
+        precios = request.form.getlist('precio[]')
+        
+        if not proveedor_id:
+            flash('Debe seleccionar un proveedor', 'error')
+            return redirect(url_for('nueva_orden'))
+
+        orden = OrdenCompra(proveedor_id=proveedor_id, fecha_creacion=datetime.utcnow())
+        db.session.add(orden)
+        db.session.flush()
+
+        total = 0
+        for pid, cant, precio in zip(productos_ids, cantidades, precios):
+            if int(cant) > 0:
+                detalle = DetalleOrdenCompra(
+                    orden_compra_id=orden.id,
+                    producto_id=int(pid),
+                    cantidad=int(cant),
+                    precio_unitario=float(precio)
+                )
+                total += int(cant) * float(precio)
+                db.session.add(detalle)
+
+        orden.total = total
+        db.session.commit()
+
+        flash('Orden creada correctamente', 'success')
+        return redirect(url_for('listar_ordenes'))
+
+    # Aquí serializamos los productos manualmente
+    productos_json = [
+        {'id': p.id, 'nombre': p.nombre, 'precio': float(p.precio)}
+        for p in productos
+    ]
+
+    return render_template('/admin/nueva_orden.html', proveedores=proveedores, productos_json=productos_json)
 
 
 if __name__ == '__main__':

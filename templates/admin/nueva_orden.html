@@ -1,0 +1,87 @@
+{% extends 'admin/layout.html' %}
+
+{% block content %}
+<title>Nueva Orden de Compra</title>
+
+<script>
+const productos = {{ productos_json | tojson }};
+let filaIndex = 0;
+
+function agregarFila() {
+    const tbody = document.getElementById('tabla-productos');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td>
+            <select class="form-select" name="producto[]" onchange="actualizarPrecio(this, ${filaIndex})" required>
+                <option value="">--Seleccione--</option>
+                ${productos.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('')}
+            </select>
+        </td>
+        <td>
+            <input type="number" class="form-control" name="cantidad[]" min="0" value="0" required />
+        </td>
+        <td>
+            <input type="number" class="form-control" name="precio[]" id="precio-${filaIndex}" value="0" step="0.01" readonly />
+        </td>
+        <td>
+            <button type="button" class="btn btn-danger btn-sm" onclick="eliminarFila(this)">❌</button>
+        </td>
+    `;
+    tbody.appendChild(tr);
+    filaIndex++;
+}
+
+function eliminarFila(btn) {
+    const fila = btn.closest('tr');
+    fila.remove();
+}
+
+function actualizarPrecio(select, index) {
+    const precioInput = document.getElementById('precio-' + index);
+    const seleccionado = productos.find(p => p.id == select.value);
+    precioInput.value = seleccionado ? seleccionado.precio : 0;
+}
+
+window.onload = () => agregarFila();
+</script>
+
+<div class="container my-4">
+    <h1 class="mb-4">Crear Nueva Orden</h1>
+    <a href="{{ url_for('listar_ordenes') }}" class="btn btn-secondary mb-4">Volver a órdenes</a>
+
+    <form method="POST">
+        <div class="mb-3 row align-items-center">
+            <label for="proveedor" class="col-sm-2 col-form-label">Proveedor:</label>
+            <div class="col-sm-10">
+                <select class="form-select" name="proveedor" id="proveedor" required>
+                    <option value="">--Seleccione--</option>
+                    {% for prov in proveedores %}
+                        <option value="{{ prov.id }}">{{ prov.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <h3>Productos</h3>
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Precio unitario</th>
+                        <th>Quitar</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-productos">
+                    <!-- Filas se agregarán dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+
+        <button type="button" class="btn btn-primary mb-3" onclick="agregarFila()">➕ Agregar producto</button>
+        <br>
+        <button type="submit" class="btn btn-success">Crear Orden</button>
+    </form>
+</div>
+{% endblock %}

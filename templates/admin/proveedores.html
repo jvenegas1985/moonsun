@@ -1,0 +1,112 @@
+{% extends 'admin/layout.html' %}
+
+{% block content %}
+<h2 class="mb-4 text-center"><i class="bi bi-truck"></i> Lista de Proveedores</h2>
+
+<div class="d-flex justify-content-center gap-2 mb-3">
+  <a href="{{ url_for('nuevo_proveedor') }}" class="btn btn-outline-primary">
+    <i class="bi bi-plus-circle"></i> Nuevo Proveedor
+  </a>
+</div>
+
+<div class="table-responsive">
+  <table id="tablaProveedores" class="table table-striped table-hover table-bordered bg-white align-middle">
+    <thead class="table-light sticky-top">
+      <tr class="text-center">
+        <th>Nombre</th>
+        <th>Contacto</th>
+        <th>Teléfono</th>
+        <th>Email</th>
+        <th>Dirección</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for proveedor in proveedores %}
+      <tr>
+        <td>{{ proveedor.nombre }}</td>
+        <td>{{ proveedor.contacto }}</td>
+        <td>{{ proveedor.telefono }}</td>
+        <td>{{ proveedor.email }}</td>
+        <td>{{ proveedor.direccion }}</td>
+        <td class="text-center">
+          <!-- Botón Editar -->
+          <button class="btn btn-sm btn-warning me-1" data-bs-toggle="modal" data-bs-target="#editarProveedor{{ proveedor.id }}">
+            <i class="bi bi-pencil"></i>
+          </button>
+
+          <!-- Formulario Eliminar -->
+          <form action="{{ url_for('eliminar_proveedor', id=proveedor.id) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este proveedor?');">
+            <button type="submit" class="btn btn-sm btn-danger">
+              <i class="bi bi-trash"></i>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Modales fuera del <table> -->
+{% for proveedor in proveedores %}
+<div class="modal fade" id="editarProveedor{{ proveedor.id }}" tabindex="-1" aria-labelledby="editarLabel{{ proveedor.id }}" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ url_for('editar_proveedor', id=proveedor.id) }}">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editarLabel{{ proveedor.id }}">
+            <i class="bi bi-pencil-square"></i> Editar Proveedor
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Nombre</label>
+            <input type="text" name="nombre" class="form-control" value="{{ proveedor.nombre }}" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Contacto</label>
+            <input type="text" name="contacto" class="form-control" value="{{ proveedor.contacto }}">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Teléfono</label>
+            <input type="text" name="telefono" class="form-control" value="{{ proveedor.telefono }}">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" value="{{ proveedor.email }}">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Dirección</label>
+            <input type="text" name="direccion" class="form-control" value="{{ proveedor.direccion }}">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success"><i class="bi bi-save"></i> Guardar</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endfor %}
+
+<!-- DataTables Scripts -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const tabla = document.getElementById('tablaProveedores');
+    if (tabla) {
+      new DataTable(tabla, {
+        language: {
+          url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json'
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}
