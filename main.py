@@ -1,10 +1,14 @@
+UPLOAD_FOLDER = os.path.join('static', 'uploads')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from models import db, Cliente, Empleado, Servicio, Cita
 from datetime import datetime, timedelta
 from functools import wraps
 from models import Servicio, Producto  # Asegúrate de importar tus modelos
 from werkzeug.utils import secure_filename
-import os
+import os,logging
+from werkzeug.utils import secure_filename
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from models import db
@@ -22,8 +26,8 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
     
-UPLOAD_FOLDER = os.path.join('static', 'uploads')
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50 MB
 
@@ -264,24 +268,37 @@ def productos_publicos():
     return render_template('public/productos.html', productos=productos)
 
 @app.route('/admin/productos', methods=['GET', 'POST'])
-@login_required  # Mejor proteger esta ruta
+@login_required
 def admin_productos():
     if request.method == 'POST':
         nombre = request.form['nombre']
         descripcion = request.form.get('descripcion')
         precio = float(request.form['precio'])
 
-        imagen = request.files.get('imagen')  # Recoger archivo
-
+        imagen = request.files.get('imagen')
         imagen_url = None
+
         if imagen and allowed_file(imagen.filename):
             filename = secure_filename(imagen.filename)
-            import time
             filename = f"{int(time.time())}_{filename}"
-            save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-            imagen.save(save_path)
-            imagen_url = f'uploads/{filename}'
+            upload_folder = app.config['UPLOAD_FOLDER']
+            save_path = os.path.join(upload_folder, filename)
+
+            try:
+                os.makedirs(upload_folder, exist_ok=True)
+                imagen.save(save_path)
+
+                if os.path.exists(save_path):
+                    imagen_url = f'uploads/{filename}'
+                    print(f"[INFO] Imagen guardada en: {save_path}")
+                else:
+                    flash('Error: no se pudo guardar la imagen.', 'danger')
+                    return redirect(url_for('admin_productos'))
+
+            except Exception as e:
+                logging.exception("Error al guardar imagen")
+                flash('Error al subir imagen.', 'danger')
+                return redirect(url_for('admin_productos'))
 
         nuevo = Producto(nombre=nombre, descripcion=descripcion, precio=precio, imagen_url=imagen_url)
         db.session.add(nuevo)
