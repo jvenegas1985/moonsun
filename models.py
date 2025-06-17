@@ -102,7 +102,8 @@ class OrdenCompra(db.Model):
     total = db.Column(db.Float, default=0.0)
 
     proveedor = db.relationship('Proveedor', backref='ordenes', lazy=True)
-    detalles = db.relationship('DetalleOrdenCompra', backref='orden', lazy=True)
+    detalles = db.relationship('DetalleOrdenCompra', backref='orden', lazy=True, cascade='all, delete-orphan')
+
 
 
 

@@ -4,13 +4,20 @@ from datetime import datetime, timedelta, time
 from functools import wraps
 from models import Servicio, Producto, Proveedor, OrdenCompra, DetalleOrdenCompra  # Asegúrate de importar tus modelos
 from werkzeug.utils import secure_filename
-import os,logging
 from werkzeug.utils import secure_filename
 from flask_sqlalchemy import SQLAlchemy
 from models import db
 from urllib.parse import quote_plus
-import time,os
+import time, os, logging
 from models import Tarea
+from pytz import timezone, utc
+
+
+import pytz
+
+zona_local = pytz.timezone('America/Costa_Rica')
+fecha_local = datetime.now(zona_local)
+
 app = Flask(__name__)
 
 app.secret_key = 'tu_clave_secreta_aqui'  # IMPORTANTE para usar sesiones
@@ -456,7 +463,7 @@ def catalogo():
     return render_template("catalogo.html")
 
 
-import os
+
 
 RUTA_CATALOGO = os.path.join('static', 'pdf', 'catalogo.pdf')
 
@@ -588,6 +595,61 @@ def nueva_orden():
     ]
 
     return render_template('/admin/nueva_orden.html', proveedores=proveedores, productos_json=productos_json)
+
+
+from sqlalchemy.orm import joinedload
+@app.route('/ordenes/<int:id>')
+def detalle_orden(id):
+    orden = db.session.query(OrdenCompra).options(
+        joinedload(OrdenCompra.detalles).joinedload(DetalleOrdenCompra.producto),
+        joinedload(OrdenCompra.proveedor)
+        
+    ).get_or_404(id)
+    if orden.fecha_creacion.tzinfo is None:
+        fecha_utc = orden.fecha_creacion.replace(tzinfo=utc)
+    else:
+        fecha_utc = orden.fecha_creacion.astimezone(utc)
+        
+    tz_cr = timezone('America/Costa_Rica')
+    orden.fecha_local = fecha_utc.astimezone(tz_cr)
+    return render_template('admin/detalle_orden.html', orden=orden)
+
+
+@app.route('/ordenes/<int:id>/cambiar_estado', methods=['POST'])
+def cambiar_estado_orden(id):
+    orden = OrdenCompra.query.get_or_404(id)
+    nuevo_estado = request.form.get('estado')
+    
+    if nuevo_estado not in ['pendiente', 'procesada', 'cancelada']:
+        flash('Estado inválido', 'error')
+        return redirect(url_for('detalle_orden', id=id))
+
+    orden.estado = nuevo_estado
+    db.session.commit()
+    flash(f'Estado cambiado a {nuevo_estado.capitalize()}', 'success')
+    return redirect(url_for('detalle_orden', id=id))
+
+
+
+
+@app.route('/ordenes/<int:id>/eliminar', methods=['POST'])
+def eliminar_orden(id):
+    orden = OrdenCompra.query.get_or_404(id)
+
+    if orden.estado != 'cancelada':
+        flash('Solo se pueden eliminar órdenes canceladas.', 'warning')
+        return redirect(url_for('detalle_orden', id=id))
+
+    try:
+        db.session.delete(orden)
+        db.session.commit()
+        flash('Orden eliminada correctamente.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Ocurrió un error al eliminar la orden.', 'danger')
+
+    return redirect(url_for('listar_ordenes'))
+
 
 
 if __name__ == '__main__':

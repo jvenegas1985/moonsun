@@ -10,78 +10,116 @@ let filaIndex = 0;
 function agregarFila() {
     const tbody = document.getElementById('tabla-productos');
     const tr = document.createElement('tr');
+    tr.setAttribute('data-index', filaIndex);
     tr.innerHTML = `
         <td>
-            <select class="form-select" name="producto[]" onchange="actualizarPrecio(this, ${filaIndex})" required>
+            <select class="form-select" name="producto[]" required>
                 <option value="">--Seleccione--</option>
                 ${productos.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('')}
             </select>
         </td>
         <td>
-            <input type="number" class="form-control" name="cantidad[]" min="0" value="0" required />
+            <input type="number" class="form-control cantidad" name="cantidad[]" min="0" value="0" required 
+                   onchange="calcularSubtotal(${filaIndex})" />
         </td>
         <td>
-            <input type="number" class="form-control" name="precio[]" id="precio-${filaIndex}" value="0" step="0.01" readonly />
+            <input type="number" class="form-control precio" name="precio[]" min="0.01" step="0.01" value="0" required 
+                   onchange="calcularSubtotal(${filaIndex})" />
         </td>
-        <td>
-            <button type="button" class="btn btn-danger btn-sm" onclick="eliminarFila(this)">❌</button>
+        <td class="text-end">
+            <span id="subtotal-${filaIndex}" class="fw-bold">₡0.00</span>
+        </td>
+        <td class="text-center">
+            <button type="button" class="btn btn-outline-danger btn-sm" onclick="eliminarFila(this)">
+                <i class="bi bi-x-circle"></i>
+            </button>
         </td>
     `;
     tbody.appendChild(tr);
     filaIndex++;
+    calcularTotalGeneral();
 }
 
 function eliminarFila(btn) {
-    const fila = btn.closest('tr');
-    fila.remove();
+    btn.closest('tr').remove();
+    calcularTotalGeneral();
 }
 
-function actualizarPrecio(select, index) {
-    const precioInput = document.getElementById('precio-' + index);
-    const seleccionado = productos.find(p => p.id == select.value);
-    precioInput.value = seleccionado ? seleccionado.precio : 0;
+function calcularSubtotal(index) {
+    const row = document.querySelector(`tr[data-index="${index}"]`);
+    if (!row) return;
+    const cantidad = parseFloat(row.querySelector('.cantidad').value) || 0;
+    const precio = parseFloat(row.querySelector('.precio').value) || 0;
+    const subtotal = cantidad * precio;
+    document.getElementById(`subtotal-${index}`).textContent = `₡${subtotal.toFixed(2)}`;
+    calcularTotalGeneral();
+}
+
+function calcularTotalGeneral() {
+    let total = 0;
+    const filas = document.querySelectorAll('#tabla-productos tr');
+    filas.forEach(fila => {
+        const cantidad = parseFloat(fila.querySelector('.cantidad')?.value) || 0;
+        const precio = parseFloat(fila.querySelector('.precio')?.value) || 0;
+        total += cantidad * precio;
+    });
+    document.getElementById('total-general').textContent = `₡${total.toFixed(2)}`;
 }
 
 window.onload = () => agregarFila();
 </script>
 
-<div class="container my-4">
-    <h1 class="mb-4">Crear Nueva Orden</h1>
-    <a href="{{ url_for('listar_ordenes') }}" class="btn btn-secondary mb-4">Volver a órdenes</a>
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Crear Nueva Orden</h1>
+        <a href="{{ url_for('listar_ordenes') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left-circle"></i> Volver a órdenes
+        </a>
+    </div>
 
-    <form method="POST">
-        <div class="mb-3 row align-items-center">
-            <label for="proveedor" class="col-sm-2 col-form-label">Proveedor:</label>
-            <div class="col-sm-10">
-                <select class="form-select" name="proveedor" id="proveedor" required>
-                    <option value="">--Seleccione--</option>
-                    {% for prov in proveedores %}
-                        <option value="{{ prov.id }}">{{ prov.nombre }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+    <form method="POST" class="bg-white p-4 rounded shadow-sm">
+        <div class="mb-4">
+            <label for="proveedor" class="form-label">Proveedor</label>
+            <select class="form-select" name="proveedor" id="proveedor" required>
+                <option value="">--Seleccione--</option>
+                {% for prov in proveedores %}
+                    <option value="{{ prov.id }}">{{ prov.nombre }}</option>
+                {% endfor %}
+            </select>
         </div>
 
-        <h3>Productos</h3>
+        <h4 class="mb-3">Productos</h4>
         <div class="table-responsive">
-            <table class="table table-bordered align-middle">
+            <table class="table table-bordered table-hover align-middle">
                 <thead class="table-light">
                     <tr>
                         <th>Producto</th>
-                        <th>Cantidad</th>
-                        <th>Precio unitario</th>
-                        <th>Quitar</th>
+                        <th style="width: 120px;">Cantidad</th>
+                        <th style="width: 150px;">Precio unitario</th>
+                        <th class="text-end" style="width: 150px;">Subtotal</th>
+                        <th class="text-center" style="width: 50px;">Quitar</th>
                     </tr>
                 </thead>
                 <tbody id="tabla-productos">
-                    <!-- Filas se agregarán dinámicamente -->
+                    <!-- Filas dinámicas -->
                 </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3" class="text-end fw-bold">Total:</td>
+                        <td colspan="2" id="total-general" class="text-end fw-bold">₡0.00</td>
+                    </tr>
+                </tfoot>
             </table>
         </div>
 
-        <button type="button" class="btn btn-primary mb-3" onclick="agregarFila()">➕ Agregar producto</button>
-        <br>
-        <button type="submit" class="btn btn-success">Crear Orden</button>
+        <div class="d-flex justify-content-between mt-3">
+            <button type="button" class="btn btn-outline-primary" onclick="agregarFila()">
+                <i class="bi bi-plus-circle"></i> Agregar producto
+            </button>
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-circle"></i> Crear Orden
+            </button>
+        </div>
     </form>
 </div>
 {% endblock %}
