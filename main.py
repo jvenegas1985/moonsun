@@ -265,18 +265,31 @@ def servicios_publicos():
 
 @app.route('/productos')
 def productos_publicos():
-    productos = Producto.query.all()
+    # Solo mostrar productos visibles públicamente
+    productos = Producto.query.filter_by(visible=True).all()
+    
     for prod in productos:
         prod.nombre_url = quote_plus(prod.nombre)
+    
     return render_template('public/productos.html', productos=productos)
+
+
 
 @app.route('/admin/productos', methods=['GET', 'POST'])
 @login_required
 def admin_productos():
     if request.method == 'POST':
+        codigo = request.form['codigo']
         nombre = request.form['nombre']
         descripcion = request.form.get('descripcion')
         precio = float(request.form['precio'])
+        visible = 'visible' in request.form
+
+        # Verificar si el código ya existe
+        existe = Producto.query.filter_by(codigo=codigo).first()
+        if existe:
+            flash('El código ya existe, elige otro.', 'danger')
+            return redirect(url_for('admin_productos'))
 
         imagen = request.files.get('imagen')
         imagen_url = None
@@ -285,25 +298,19 @@ def admin_productos():
             filename = secure_filename(imagen.filename)
             filename = f"{int(time.time())}_{filename}"
             upload_folder = app.config['UPLOAD_FOLDER']
+            os.makedirs(upload_folder, exist_ok=True)
             save_path = os.path.join(upload_folder, filename)
+            imagen.save(save_path)
+            imagen_url = f'uploads/{filename}'
 
-            try:
-                os.makedirs(upload_folder, exist_ok=True)
-                imagen.save(save_path)
-
-                if os.path.exists(save_path):
-                    imagen_url = f'uploads/{filename}'
-                    print(f"[INFO] Imagen guardada en: {save_path}")
-                else:
-                    flash('Error: no se pudo guardar la imagen.', 'danger')
-                    return redirect(url_for('admin_productos'))
-
-            except Exception as e:
-                logging.exception("Error al guardar imagen")
-                flash('Error al subir imagen.', 'danger')
-                return redirect(url_for('admin_productos'))
-
-        nuevo = Producto(nombre=nombre, descripcion=descripcion, precio=precio, imagen_url=imagen_url)
+        nuevo = Producto(
+            codigo=codigo,
+            nombre=nombre,
+            descripcion=descripcion,
+            precio=precio,
+            imagen_url=imagen_url,
+            visible=visible
+        )
         db.session.add(nuevo)
         db.session.commit()
         flash('Producto agregado exitosamente', 'success')
@@ -315,15 +322,26 @@ def admin_productos():
 
 
 
+
+
 @app.route('/admin/productos/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
 def editar_producto(id):
     prod = Producto.query.get_or_404(id)
 
     if request.method == 'POST':
+        codigo = request.form['codigo']
+        # Validar que el código no exista en otro producto
+        existe = Producto.query.filter(Producto.codigo == codigo, Producto.id != id).first()
+        if existe:
+            flash('El código ya existe en otro producto.', 'danger')
+            return redirect(url_for('editar_producto', id=id))
+
+        prod.codigo = codigo
         prod.nombre = request.form['nombre']
         prod.descripcion = request.form.get('descripcion')
         prod.precio = float(request.form['precio'])
+        prod.visible = 'visible' in request.form
 
         # Manejo de imagen
         if 'imagen' in request.files:
@@ -340,8 +358,6 @@ def editar_producto(id):
                 filename = f"{int(time.time())}_{filename}"
                 filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 file.save(filepath)
-
-                # Guardar ruta en formato web-friendly
                 prod.imagen_url = f"uploads/{filename}"
 
         db.session.commit()
@@ -359,6 +375,7 @@ def editar_producto(id):
 
 
 @app.route('/admin/productos/eliminar/<int:id>', methods=['POST'])
+@login_required
 def eliminar_producto(id):
     prod = Producto.query.get_or_404(id)
     db.session.delete(prod)
@@ -475,6 +492,7 @@ def panel_catalogo():
     return render_template('admin/gestionar_catalogo.html', mensaje=mensaje, catalogo_existe=catalogo_existe)
 
 @app.route('/admin/catalogo/subir', methods=['POST'])
+@login_required
 def subir_catalogo():
     archivo = request.files.get('pdf')
     if archivo and archivo.filename.endswith('.pdf'):
@@ -483,6 +501,7 @@ def subir_catalogo():
     return redirect(url_for('panel_catalogo', mensaje="Error: archivo no válido."))
 
 @app.route('/admin/catalogo/eliminar', methods=['POST'])
+@login_required
 def eliminar_catalogo():
     if os.path.exists(RUTA_CATALOGO):
         os.remove(RUTA_CATALOGO)
@@ -492,6 +511,7 @@ def eliminar_catalogo():
 
 
 @app.route('/admin/proveedores')
+@login_required
 def vista_proveedores():
     lista_proveedores = Proveedor.query.all()
     return render_template('admin/proveedores.html', proveedores=lista_proveedores)
@@ -499,6 +519,7 @@ def vista_proveedores():
 
 
 @app.route('/admin/proveedores/nuevo', methods=['GET', 'POST'])
+@login_required
 def nuevo_proveedor():
     if request.method == 'POST':
         nombre = request.form['nombre']
@@ -526,6 +547,7 @@ def nuevo_proveedor():
 
 
 @app.route('/admin/proveedor/editar/<int:id>', methods=['POST'])
+@login_required
 def editar_proveedor(id):
     proveedor = Proveedor.query.get_or_404(id)
     proveedor.nombre = request.form['nombre']
@@ -537,6 +559,7 @@ def editar_proveedor(id):
     return redirect(url_for('vista_proveedores'))
 
 @app.route('/admin/proveedor/eliminar/<int:id>', methods=['POST'])
+@login_required
 def eliminar_proveedor(id):
     proveedor = Proveedor.query.get_or_404(id)
     db.session.delete(proveedor)
@@ -546,12 +569,14 @@ def eliminar_proveedor(id):
 
 
 @app.route('/ordenes')
+@login_required
 def listar_ordenes():
     ordenes = OrdenCompra.query.order_by(OrdenCompra.fecha_creacion.desc()).all()
     return render_template('/admin/ordenes.html', ordenes=ordenes)
 
 
 @app.route('/ordenes/nueva', methods=['GET', 'POST'])
+@login_required
 def nueva_orden():
     proveedores = Proveedor.query.all()
     productos = Producto.query.all()
@@ -561,9 +586,13 @@ def nueva_orden():
         productos_ids = request.form.getlist('producto[]')
         cantidades = request.form.getlist('cantidad[]')
         precios = request.form.getlist('precio[]')
-        
-        if not proveedor_id:
-            flash('Debe seleccionar un proveedor', 'error')
+
+        if not proveedor_id or not productos_ids or not cantidades or not precios:
+            flash('Debe completar todos los campos de la orden', 'error')
+            return redirect(url_for('nueva_orden'))
+
+        if len(productos_ids) != len(cantidades) or len(cantidades) != len(precios):
+            flash('Datos de productos inconsistentes', 'error')
             return redirect(url_for('nueva_orden'))
 
         orden = OrdenCompra(proveedor_id=proveedor_id, fecha_creacion=datetime.utcnow())
@@ -572,15 +601,22 @@ def nueva_orden():
 
         total = 0
         for pid, cant, precio in zip(productos_ids, cantidades, precios):
-            if int(cant) > 0:
-                detalle = DetalleOrdenCompra(
-                    orden_compra_id=orden.id,
-                    producto_id=int(pid),
-                    cantidad=int(cant),
-                    precio_unitario=float(precio)
-                )
-                total += int(cant) * float(precio)
-                db.session.add(detalle)
+            try:
+                pid = int(pid)
+                cant = int(cant)
+                precio = float(precio)
+                if cant > 0:
+                    detalle = DetalleOrdenCompra(
+                        orden_compra_id=orden.id,
+                        producto_id=pid,
+                        cantidad=cant,
+                        precio_unitario=precio
+                    )
+                    total += cant * precio
+                    db.session.add(detalle)
+            except (ValueError, TypeError):
+                flash('Error en los datos del producto. Verifique los valores ingresados.', 'error')
+                return redirect(url_for('nueva_orden'))
 
         orden.total = total
         db.session.commit()
@@ -588,17 +624,18 @@ def nueva_orden():
         flash('Orden creada correctamente', 'success')
         return redirect(url_for('listar_ordenes'))
 
-    # Aquí serializamos los productos manualmente
     productos_json = [
-        {'id': p.id, 'nombre': p.nombre, 'precio': float(p.precio)}
+        {'id': p.id, 'codigo': p.codigo, 'nombre': p.nombre, 'precio': float(p.precio)}
         for p in productos
     ]
 
     return render_template('/admin/nueva_orden.html', proveedores=proveedores, productos_json=productos_json)
 
 
+
 from sqlalchemy.orm import joinedload
 @app.route('/ordenes/<int:id>')
+@login_required
 def detalle_orden(id):
     orden = db.session.query(OrdenCompra).options(
         joinedload(OrdenCompra.detalles).joinedload(DetalleOrdenCompra.producto),
@@ -616,6 +653,7 @@ def detalle_orden(id):
 
 
 @app.route('/ordenes/<int:id>/cambiar_estado', methods=['POST'])
+@login_required
 def cambiar_estado_orden(id):
     orden = OrdenCompra.query.get_or_404(id)
     nuevo_estado = request.form.get('estado')

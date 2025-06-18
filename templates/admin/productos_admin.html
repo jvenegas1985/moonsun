@@ -3,33 +3,66 @@
 {% block content %}
 <h2 class="mb-4"><i class="bi bi-box-seam"></i> Gestión de Productos</h2>
 
-<!-- Formulario para agregar producto -->
-<form method="POST" enctype="multipart/form-data" class="mb-4">
-  <div class="row g-2 align-items-end">
-    <div class="col-md-3">
-      <input type="text" name="nombre" class="form-control" placeholder="Nombre del producto" required>
-    </div>
-    <div class="col-md-3">
-      <input type="text" name="descripcion" class="form-control" placeholder="Descripción">
-    </div>
-    <div class="col-md-2">
-      <input type="number" name="precio" step="0.01" class="form-control" placeholder="Precio" required>
-    </div>
-    <div class="col-md-2">
-      <input type="file" name="imagen" class="form-control" accept="image/*">
-    </div>
-    <div class="col-md-2">
-      <button class="btn btn-success w-100" type="submit"><i class="bi bi-plus-circle"></i> Agregar</button>
+<!-- Botón para abrir modal agregar -->
+<button type="button" class="btn btn-success mb-4" data-bs-toggle="modal" data-bs-target="#modalAgregarProducto">
+  <i class="bi bi-plus-circle"></i> Agregar Producto
+</button>
+
+<!-- Modal Agregar Producto -->
+<div class="modal fade" id="modalAgregarProducto" tabindex="-1" aria-labelledby="modalAgregarProductoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content rounded-4 shadow-sm">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalAgregarProductoLabel"><i class="bi bi-plus-circle"></i> Agregar Nuevo Producto</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <form method="POST" enctype="multipart/form-data" action="{{ url_for('admin_productos') }}">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="codigo" class="form-label">Código del producto</label>
+            <input type="text" class="form-control" id="codigo" name="codigo" placeholder="Código único" required>
+          </div>
+          <div class="mb-3">
+            <label for="nombre" class="form-label">Nombre</label>
+            <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Nombre del producto" required>
+          </div>
+          <div class="mb-3">
+            <label for="descripcion" class="form-label">Descripción</label>
+            <textarea class="form-control" id="descripcion" name="descripcion" rows="3" placeholder="Descripción"></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="precio" class="form-label">Precio</label>
+            <input type="number" step="0.01" class="form-control" id="precio" name="precio" placeholder="₡ Precio" required>
+          </div>
+          <div class="mb-3">
+            <label for="imagen" class="form-label">Imagen (opcional)</label>
+            <input type="file" class="form-control" id="imagen" name="imagen" accept="image/*">
+          </div>
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="visible" name="visible" value="1" checked>
+            <label class="form-check-label" for="visible">
+              Visible en la página web
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success"><i class="bi bi-plus-circle"></i> Agregar Producto</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        </div>
+      </form>
     </div>
   </div>
-</form>
+</div>
 
-<table class="table table-bordered">
-  <thead>
+<!-- Tabla de productos -->
+<table class="table table-bordered table-hover align-middle">
+  <thead class="table-light">
     <tr>
+      <th>Código</th>
       <th>Nombre</th>
       <th>Descripción</th>
       <th>Precio</th>
+      <th>Visible</th>
       <th>Imagen</th>
       <th>Acciones</th>
     </tr>
@@ -37,9 +70,11 @@
   <tbody>
     {% for prod in productos %}
     <tr>
+      <td>{{ prod.codigo }}</td>
       <td>{{ prod.nombre }}</td>
       <td>{{ prod.descripcion }}</td>
       <td>₡{{ "%.2f"|format(prod.precio) }}</td>
+      <td>{% if prod.visible %}Sí{% else %}No{% endif %}</td>
       <td>
         {% if prod.imagen_url %}
           <img src="{{ url_for('static', filename=prod.imagen_url) }}" width="60" alt="{{ prod.nombre }}">
@@ -57,6 +92,4 @@
     {% endfor %}
   </tbody>
 </table>
-
-</div>
 {% endblock %}

@@ -1,125 +1,234 @@
 {% extends 'admin/layout.html' %}
-
 {% block content %}
 <title>Nueva Orden de Compra</title>
+
+<div class="container my-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3">Crear Nueva Orden</h1>
+    <a href="{{ url_for('listar_ordenes') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left-circle"></i> Volver a órdenes
+    </a>
+  </div>
+
+  <form method="POST" class="bg-white p-4 rounded shadow-sm">
+    <div class="mb-4">
+      <label for="proveedor" class="form-label">Proveedor</label>
+      <select class="form-select" name="proveedor" id="proveedor" required>
+        <option value="">--Seleccione--</option>
+        {% for prov in proveedores %}
+          <option value="{{ prov.id }}">{{ prov.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <button type="button" class="btn btn-outline-primary mb-3" data-bs-toggle="modal" data-bs-target="#buscarProductoModal">
+      <i class="bi bi-search"></i> Buscar Producto
+    </button>
+
+    <!-- Modal de productos -->
+    <div class="modal fade" id="buscarProductoModal" tabindex="-1" aria-labelledby="buscarProductoLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="buscarProductoLabel">Buscar Productos</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+            <input type="text" id="filtroProducto" class="form-control mb-3" placeholder="Buscar por nombre o código..." onkeyup="filtrarProductos()">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Nombre</th>
+                  <th>Precio</th>
+                  <th>Agregar</th>
+                </tr>
+              </thead>
+              <tbody id="listaProductosModal"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h4 class="mb-3">Productos en la Orden</h4>
+    <div class="table-responsive">
+      <table class="table table-bordered align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Producto</th>
+            <th style="width: 120px;">Cantidad</th>
+            <th style="width: 150px;">Precio unitario</th>
+            <th class="text-end" style="width: 150px;">Subtotal</th>
+            <th class="text-center" style="width: 50px;">Quitar</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-productos"></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3" class="text-end fw-bold">Total:</td>
+            <td colspan="2" id="total-general" class="text-end fw-bold">₡0.00</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="d-flex justify-content-end mt-3">
+      <button type="submit" class="btn btn-success">
+        <i class="bi bi-check-circle"></i> Crear Orden
+      </button>
+    </div>
+  </form>
+</div>
 
 <script>
 const productos = {{ productos_json | tojson }};
 let filaIndex = 0;
 
-function agregarFila() {
-    const tbody = document.getElementById('tabla-productos');
+function cargarProductosModal() {
+  const tbody = document.getElementById('listaProductosModal');
+  tbody.innerHTML = '';
+  productos.forEach(prod => {
     const tr = document.createElement('tr');
-    tr.setAttribute('data-index', filaIndex);
     tr.innerHTML = `
-        <td>
-            <select class="form-select" name="producto[]" required>
-                <option value="">--Seleccione--</option>
-                ${productos.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('')}
-            </select>
-        </td>
-        <td>
-            <input type="number" class="form-control cantidad" name="cantidad[]" min="0" value="0" required 
-                   onchange="calcularSubtotal(${filaIndex})" />
-        </td>
-        <td>
-            <input type="number" class="form-control precio" name="precio[]" min="0.01" step="0.01" value="0" required 
-                   onchange="calcularSubtotal(${filaIndex})" />
-        </td>
-        <td class="text-end">
-            <span id="subtotal-${filaIndex}" class="fw-bold">₡0.00</span>
-        </td>
-        <td class="text-center">
-            <button type="button" class="btn btn-outline-danger btn-sm" onclick="eliminarFila(this)">
-                <i class="bi bi-x-circle"></i>
-            </button>
-        </td>
+      <td>${prod.codigo}</td>
+      <td>${prod.nombre}</td>
+      <td>₡${parseFloat(prod.precio).toFixed(2)}</td>
+      <td>
+        <button type="button" class="btn btn-sm btn-success agregar-btn">
+          <i class="bi bi-plus-circle"></i> Agregar
+        </button>
+      </td>
     `;
+    // Guardamos datos producto en dataset para facilitar la lectura
+    tr.querySelector('.agregar-btn').dataset.id = prod.id;
+    tr.querySelector('.agregar-btn').dataset.codigo = prod.codigo;
+    tr.querySelector('.agregar-btn').dataset.nombre = prod.nombre;
+    tr.querySelector('.agregar-btn').dataset.precio = prod.precio;
     tbody.appendChild(tr);
-    filaIndex++;
-    calcularTotalGeneral();
+  });
+
+  // Delegamos evento para los botones agregar
+  tbody.querySelectorAll('.agregar-btn').forEach(btn => {
+    btn.addEventListener('click', function(event) {
+      const btn = event.currentTarget;
+      agregarProducto(
+        btn.dataset.id,
+        btn.dataset.codigo,
+        btn.dataset.nombre,
+        parseFloat(btn.dataset.precio)
+      );
+      // Cerrar modal manualmente
+      const modalEl = document.getElementById('buscarProductoModal');
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      modal.hide();
+    });
+  });
+}
+
+function filtrarProductos() {
+  const filtro = document.getElementById('filtroProducto').value.toLowerCase();
+  const tbody = document.getElementById('listaProductosModal');
+  tbody.innerHTML = '';
+  productos
+    .filter(p => p.nombre.toLowerCase().includes(filtro) || p.codigo.toLowerCase().includes(filtro))
+    .forEach(prod => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${prod.codigo}</td>
+        <td>${prod.nombre}</td>
+        <td>₡${parseFloat(prod.precio).toFixed(2)}</td>
+        <td>
+          <button type="button" class="btn btn-sm btn-success agregar-btn">
+            <i class="bi bi-plus-circle"></i> Agregar
+          </button>
+        </td>
+      `;
+      tr.querySelector('.agregar-btn').dataset.id = prod.id;
+      tr.querySelector('.agregar-btn').dataset.codigo = prod.codigo;
+      tr.querySelector('.agregar-btn').dataset.nombre = prod.nombre;
+      tr.querySelector('.agregar-btn').dataset.precio = prod.precio;
+      tbody.appendChild(tr);
+    });
+
+  // Reasignamos evento click a nuevos botones
+  tbody.querySelectorAll('.agregar-btn').forEach(btn => {
+    btn.addEventListener('click', function(event) {
+      const btn = event.currentTarget;
+      agregarProducto(
+        btn.dataset.id,
+        btn.dataset.codigo,
+        btn.dataset.nombre,
+        parseFloat(btn.dataset.precio)
+      );
+      const modalEl = document.getElementById('buscarProductoModal');
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      modal.hide();
+    });
+  });
+}
+
+function agregarProducto(id, codigo, nombre, precio) {
+  const tbody = document.getElementById('tabla-productos');
+  if ([...tbody.querySelectorAll('input[name="producto[]"]')].some(input => input.value == id)) {
+    alert('Producto ya agregado');
+    return;
+  }
+
+  const tr = document.createElement('tr');
+  tr.setAttribute('data-index', filaIndex);
+  tr.innerHTML = `
+    <td>
+      <input type="hidden" name="producto[]" value="${id}">
+      ${codigo} - ${nombre}
+    </td>
+    <td>
+      <input type="number" class="form-control cantidad" name="cantidad[]" min="1" value="1" required onchange="calcularSubtotal(${filaIndex})">
+    </td>
+    <td>
+      <input type="number" class="form-control precio" name="precio[]" min="0.01" step="0.01" value="${precio.toFixed(2)}" required onchange="calcularSubtotal(${filaIndex})">
+    </td>
+    <td class="text-end">
+      <span id="subtotal-${filaIndex}" class="fw-bold">₡${precio.toFixed(2)}</span>
+    </td>
+    <td class="text-center">
+      <button type="button" class="btn btn-outline-danger btn-sm" onclick="eliminarFila(this)">
+        <i class="bi bi-x-circle"></i>
+      </button>
+    </td>
+  `;
+  tbody.appendChild(tr);
+  filaIndex++;
+  calcularTotalGeneral();
 }
 
 function eliminarFila(btn) {
-    btn.closest('tr').remove();
-    calcularTotalGeneral();
+  btn.closest('tr').remove();
+  calcularTotalGeneral();
 }
 
 function calcularSubtotal(index) {
-    const row = document.querySelector(`tr[data-index="${index}"]`);
-    if (!row) return;
-    const cantidad = parseFloat(row.querySelector('.cantidad').value) || 0;
-    const precio = parseFloat(row.querySelector('.precio').value) || 0;
-    const subtotal = cantidad * precio;
-    document.getElementById(`subtotal-${index}`).textContent = `₡${subtotal.toFixed(2)}`;
-    calcularTotalGeneral();
+  const row = document.querySelector(`tr[data-index="${index}"]`);
+  if (!row) return;
+  const cantidad = parseFloat(row.querySelector('.cantidad').value) || 0;
+  const precio = parseFloat(row.querySelector('.precio').value) || 0;
+  const subtotal = cantidad * precio;
+  document.getElementById(`subtotal-${index}`).textContent = `₡${subtotal.toFixed(2)}`;
+  calcularTotalGeneral();
 }
 
 function calcularTotalGeneral() {
-    let total = 0;
-    const filas = document.querySelectorAll('#tabla-productos tr');
-    filas.forEach(fila => {
-        const cantidad = parseFloat(fila.querySelector('.cantidad')?.value) || 0;
-        const precio = parseFloat(fila.querySelector('.precio')?.value) || 0;
-        total += cantidad * precio;
-    });
-    document.getElementById('total-general').textContent = `₡${total.toFixed(2)}`;
+  let total = 0;
+  const filas = document.querySelectorAll('#tabla-productos tr');
+  filas.forEach(fila => {
+    const cantidad = parseFloat(fila.querySelector('.cantidad')?.value) || 0;
+    const precio = parseFloat(fila.querySelector('.precio')?.value) || 0;
+    total += cantidad * precio;
+  });
+  document.getElementById('total-general').textContent = `₡${total.toFixed(2)}`;
 }
 
-window.onload = () => agregarFila();
+document.addEventListener('DOMContentLoaded', cargarProductosModal);
 </script>
 
-<div class="container my-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3">Crear Nueva Orden</h1>
-        <a href="{{ url_for('listar_ordenes') }}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left-circle"></i> Volver a órdenes
-        </a>
-    </div>
-
-    <form method="POST" class="bg-white p-4 rounded shadow-sm">
-        <div class="mb-4">
-            <label for="proveedor" class="form-label">Proveedor</label>
-            <select class="form-select" name="proveedor" id="proveedor" required>
-                <option value="">--Seleccione--</option>
-                {% for prov in proveedores %}
-                    <option value="{{ prov.id }}">{{ prov.nombre }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <h4 class="mb-3">Productos</h4>
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Producto</th>
-                        <th style="width: 120px;">Cantidad</th>
-                        <th style="width: 150px;">Precio unitario</th>
-                        <th class="text-end" style="width: 150px;">Subtotal</th>
-                        <th class="text-center" style="width: 50px;">Quitar</th>
-                    </tr>
-                </thead>
-                <tbody id="tabla-productos">
-                    <!-- Filas dinámicas -->
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <td colspan="3" class="text-end fw-bold">Total:</td>
-                        <td colspan="2" id="total-general" class="text-end fw-bold">₡0.00</td>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
-
-        <div class="d-flex justify-content-between mt-3">
-            <button type="button" class="btn btn-outline-primary" onclick="agregarFila()">
-                <i class="bi bi-plus-circle"></i> Agregar producto
-            </button>
-            <button type="submit" class="btn btn-success">
-                <i class="bi bi-check-circle"></i> Crear Orden
-            </button>
-        </div>
-    </form>
-</div>
 {% endblock %}

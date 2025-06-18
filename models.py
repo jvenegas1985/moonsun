@@ -42,16 +42,23 @@ class Servicio(db.Model):
     def __repr__(self):
         return f'<Servicio {self.nombre}>'
 
+class Categoria(db.Model):
+    __tablename__ = 'categorias'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False)
+
 class Producto(db.Model):
     __tablename__ = 'productos'
     id = db.Column(db.Integer, primary_key=True)
+    codigo = db.Column(db.String(50), unique=True, nullable=False)  # código único para cada producto
     nombre = db.Column(db.String(100), nullable=False)
     precio = db.Column(db.Float, nullable=False)
     descripcion = db.Column(db.String(255))
-    imagen_url = db.Column(db.String(255))  # opcional, para mostrar imágenes
+    imagen_url = db.Column(db.String(255))
+    visible = db.Column(db.Boolean, default=True)
 
     def __repr__(self):
-        return f'<Producto {self.nombre}>'
+        return f'<Producto {self.codigo} - {self.nombre}>'
 
 
 

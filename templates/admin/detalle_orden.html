@@ -130,6 +130,7 @@
     <table>
       <thead>
         <tr>
+          <th>Código</th>
           <th>Producto</th>
           <th class="text-end">Cantidad</th>
           <th class="text-end">Precio Unitario</th>
@@ -139,6 +140,7 @@
       <tbody>
         {% for detalle in orden.detalles %}
           <tr>
+            <td>{{ detalle.producto.codigo }}</td>
             <td>{{ detalle.producto.nombre }}</td>
             <td class="text-end">{{ detalle.cantidad }}</td>
             <td class="text-end">₡{{ "%.2f"|format(detalle.precio_unitario) }}</td>
@@ -146,7 +148,7 @@
           </tr>
         {% else %}
           <tr>
-            <td colspan="4" class="text-center">No hay productos en esta orden.</td>
+            <td colspan="5" class="text-center">No hay productos en esta orden.</td>
           </tr>
         {% endfor %}
       </tbody>
