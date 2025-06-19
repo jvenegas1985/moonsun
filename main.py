@@ -11,6 +11,7 @@ from urllib.parse import quote_plus
 import time, os, logging
 from models import Tarea
 from pytz import timezone, utc
+from babel.numbers import format_currency
 
 
 import pytz
@@ -671,6 +672,7 @@ def cambiar_estado_orden(id):
 
 
 @app.route('/ordenes/<int:id>/eliminar', methods=['POST'])
+@login_required
 def eliminar_orden(id):
     orden = OrdenCompra.query.get_or_404(id)
 
@@ -688,6 +690,13 @@ def eliminar_orden(id):
 
     return redirect(url_for('listar_ordenes'))
 
+
+@app.template_filter('formatear_colones')
+@login_required
+def formatear_colones(valor):
+    if valor is None:
+        return "₡0,00"
+    return format_currency(valor, 'CRC', locale='es_CR')
 
 
 if __name__ == '__main__':

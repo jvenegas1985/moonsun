@@ -21,15 +21,12 @@
       </thead>
       <tbody>
         {% for orden in ordenes %}
-          <tr
-            {% if orden.estado == 'pendiente' %}
-              class="table-warning"
-            {% elif orden.estado == 'procesada' %}
-              class="table-success"
-            {% elif orden.estado == 'cancelada' %}
-              class="table-danger"
+          <tr class="
+            {% if orden.estado == 'pendiente' %}table-warning
+            {% elif orden.estado == 'procesada' %}table-success
+            {% elif orden.estado == 'cancelada' %}table-danger
             {% endif %}
-          >
+          ">
             <td>{{ orden.id }}</td>
             <td>{{ orden.proveedor.nombre }}</td>
             <td>{{ orden.fecha_creacion.strftime('%d/%m/%Y %I:%M %p') }}</td>
@@ -44,12 +41,11 @@
                 <span class="badge bg-secondary">{{ orden.estado|capitalize }}</span>
               {% endif %}
             </td>
-            <td class="text-end">₡{{ "%.2f"|format(orden.total) }}</td>
+            <td class="text-end">₡{{ "{:,.2f}".format(orden.total) }}</td>
             <td class="text-end">
               <a href="{{ url_for('detalle_orden', id=orden.id) }}" class="btn btn-sm btn-outline-primary">
                 Ver detalles
               </a>
-              
             </td>
           </tr>
         {% else %}
@@ -62,6 +58,6 @@
   </div>
 </div>
 
-<!-- Asegúrate de tener Bootstrap Icons cargado si usas los <i class="bi bi-..."> -->
+<!-- Bootstrap Icons -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 {% endblock %}
